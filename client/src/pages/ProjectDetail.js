@@ -16,12 +16,14 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { projectsAPI, offersAPI } from '../services/api';
+import { useI18n } from '../contexts/I18nContext';
 import toast from 'react-hot-toast';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const { data: project, isLoading } = useQuery(
     ['project', id],
@@ -104,9 +106,7 @@ const ProjectDetail = () => {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Klient: {project.clientName}
-            </p>
+            <p className="mt-1 text-sm text-gray-500">Client: {project.clientName}</p>
           </div>
         </div>
         
@@ -120,16 +120,14 @@ const ProjectDetail = () => {
             to={`/projects/${id}/edit`}
             className="btn-secondary flex items-center"
           >
-            <Edit className="h-4 w-4 mr-2" />
-            Edytuj
+            <Edit className="h-4 w-4 mr-2" />{t('buttons.edit')}
           </Link>
           
           <button
             onClick={() => window.open(`/api/offers/preview/${id}?lang=${project.language || 'pl'}`, '_blank')}
             className="btn-secondary flex items-center"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            Podgląd
+            <Eye className="h-4 w-4 mr-2" />{t('buttons.view')}
           </button>
           
           <button
@@ -137,8 +135,7 @@ const ProjectDetail = () => {
             disabled={generateOfferMutation.isLoading}
             className="btn-primary flex items-center"
           >
-            <FileText className="h-4 w-4 mr-2" />
-            Generuj ofertę
+            <FileText className="h-4 w-4 mr-2" />{t('buttons.generateOffer')}
           </button>
         </div>
       </div>
@@ -148,15 +145,15 @@ const ProjectDetail = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Project Overview */}
           <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Przegląd projektu</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Project overview</h2>
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Opis</h3>
+                <h3 className="text-sm font-medium text-gray-500">Description</h3>
                 <p className="mt-1 text-sm text-gray-900">{project.description}</p>
               </div>
               
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Główna korzyść biznesowa</h3>
+                <h3 className="text-sm font-medium text-gray-500">Main business benefit</h3>
                 <p className="mt-1 text-sm text-gray-900">{project.mainBenefit}</p>
               </div>
               
@@ -182,7 +179,7 @@ const ProjectDetail = () => {
           {/* Modules */}
           {project.modules && project.modules.length > 0 && (
             <div className="card">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Moduły projektu</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Project modules</h2>
               <div className="space-y-4">
                 {project.modules.map((module, index) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -196,7 +193,7 @@ const ProjectDetail = () => {
 
           {/* Timeline */}
           <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Harmonogram</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Timeline</h2>
             <div className="space-y-4">
               {Object.entries(project.timeline).map(([phase, data]) => (
                 <div key={phase} className="flex items-center justify-between">
@@ -217,7 +214,7 @@ const ProjectDetail = () => {
         <div className="space-y-6">
           {/* Client Information */}
           <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Informacje o kliencie</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Client info</h2>
             <div className="space-y-3">
               <div className="flex items-center">
                 <User className="h-4 w-4 text-gray-400 mr-2" />
@@ -257,7 +254,7 @@ const ProjectDetail = () => {
 
           {/* Project Manager */}
           <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Opiekun projektu</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Project manager</h2>
             <div className="space-y-3">
               <div>
                 <h3 className="font-medium text-gray-900">{project.projectManager.name}</h3>
@@ -276,7 +273,7 @@ const ProjectDetail = () => {
 
           {/* Pricing Summary */}
           <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Podsumowanie finansowe</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Financial summary</h2>
             <div className="space-y-3">
               {Object.entries(project.pricing).map(([phase, amount]) => {
                 if (phase === 'total') return null;
@@ -292,7 +289,7 @@ const ProjectDetail = () => {
               })}
               <div className="border-t pt-3">
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-900">Razem (netto)</span>
+                  <span className="font-medium text-gray-900">Total (net)</span>
                   <span className="font-bold text-lg text-primary-600">
                     {formatCurrency(project.pricing.total)}
                   </span>
@@ -303,25 +300,21 @@ const ProjectDetail = () => {
 
           {/* Project Details */}
           <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Szczegóły projektu</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Project details</h2>
             <div className="space-y-3">
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                <span className="text-sm text-gray-900">
-                  Utworzono: {new Date(project.createdAt).toLocaleDateString('pl-PL')}
-                </span>
+                <span className="text-sm text-gray-900">Created: {new Date(project.createdAt).toLocaleDateString('pl-PL')}</span>
               </div>
               <div className="flex items-center">
                 <User className="h-4 w-4 text-gray-400 mr-2" />
-                <span className="text-sm text-gray-900">
-                  Utworzył: {project.createdBy?.fullName}
-                </span>
+                <span className="text-sm text-gray-900">Created by: {project.createdBy?.fullName}</span>
               </div>
               {project.offerNumber && (
                 <div className="flex items-center">
                   <FileText className="h-4 w-4 text-gray-400 mr-2" />
                   <span className="text-sm text-gray-900">
-                    Numer oferty: {project.offerNumber}
+                    Offer number: {project.offerNumber}
                   </span>
                 </div>
               )}
@@ -344,7 +337,7 @@ const ProjectDetail = () => {
 
         {/* Changelog */}
         <div className="card">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Historia zmian</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Changelog</h2>
           <div className="space-y-3">
             {(project.changelog || []).map((c, idx) => (
               <div key={idx} className="border rounded p-3">
@@ -354,12 +347,12 @@ const ProjectDetail = () => {
                 </div>
                 <div className="text-xs text-gray-500 mt-1">{c.author?.firstName} {c.author?.lastName}</div>
                 {Array.isArray(c.fields) && c.fields.length > 0 && (
-                  <div className="text-xs text-gray-600 mt-1">Pola: {c.fields.join(', ')}</div>
+                  <div className="text-xs text-gray-600 mt-1">Fields: {c.fields.join(', ')}</div>
                 )}
               </div>
             ))}
             {(!project.changelog || project.changelog.length === 0) && (
-              <p className="text-sm text-gray-500">Brak zmian.</p>
+              <p className="text-sm text-gray-500">No changes.</p>
             )}
           </div>
         </div>

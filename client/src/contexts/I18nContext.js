@@ -4,7 +4,9 @@ const dictionaries = {
   pl: {
     common: {
       appName: 'Ofertownik',
-      loading: 'Ładowanie...'
+      loading: 'Ładowanie...',
+      yes: 'Tak',
+      no: 'Nie'
     },
     nav: {
       dashboard: 'Dashboard',
@@ -16,6 +18,18 @@ const dictionaries = {
     layout: {
       tagline: 'Przegląd i zarządzanie ofertami',
       languageTitle: 'Język ofert'
+    },
+    buttons: {
+      save: 'Zapisz',
+      cancel: 'Anuluj',
+      edit: 'Edytuj',
+      delete: 'Usuń',
+      view: 'Podgląd',
+      download: 'Pobierz',
+      generateOffer: 'Generuj ofertę',
+      generateContract: 'Wygeneruj umowę',
+      add: 'Dodaj',
+      clear: 'Wyczyść'
     },
     dashboard: {
       header: 'Dashboard',
@@ -65,7 +79,9 @@ const dictionaries = {
   en: {
     common: {
       appName: 'Offer Manager',
-      loading: 'Loading...'
+      loading: 'Loading...',
+      yes: 'Yes',
+      no: 'No'
     },
     nav: {
       dashboard: 'Dashboard',
@@ -77,6 +93,18 @@ const dictionaries = {
     layout: {
       tagline: 'Overview and offer management',
       languageTitle: 'Offer language'
+    },
+    buttons: {
+      save: 'Save',
+      cancel: 'Cancel',
+      edit: 'Edit',
+      delete: 'Delete',
+      view: 'Preview',
+      download: 'Download',
+      generateOffer: 'Generate offer',
+      generateContract: 'Generate contract',
+      add: 'Add',
+      clear: 'Clear'
     },
     dashboard: {
       header: 'Dashboard',

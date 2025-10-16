@@ -86,7 +86,7 @@ const Layout = () => {
               className="mt-3 flex w-full items-center px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
             >
               <LogOut className="mr-3 h-5 w-5" />
-              Wyloguj
+              {t('nav.logout')}
             </button>
           </div>
         </div>
@@ -134,7 +134,7 @@ const Layout = () => {
               className="mt-3 flex w-full items-center px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
             >
               <LogOut className="mr-3 h-5 w-5" />
-              Wyloguj
+              {t('nav.logout')}
             </button>
           </div>
         </div>
