@@ -151,6 +151,15 @@ const Layout = () => {
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1"></div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
+              <select
+                defaultValue={localStorage.getItem('ofertownik_lang') || 'pl'}
+                onChange={(e) => localStorage.setItem('ofertownik_lang', e.target.value)}
+                className="border rounded-md text-sm px-2 py-1 text-gray-700"
+                title="Język ofert"
+              >
+                <option value="pl">PL</option>
+                <option value="en">EN</option>
+              </select>
               <button className="text-gray-400 hover:text-gray-500">
                 <Settings className="h-6 w-6" />
               </button>

@@ -60,7 +60,7 @@ const ProjectForm = () => {
     customReservations: [],
     customPaymentTerms: '10% zaliczki po podpisaniu umowy.\n90% po odbiorze końcowym projektu.',
     consultationNotes: '',
-    language: 'pl'
+    language: localStorage.getItem('ofertownik_lang') || 'pl'
   });
 
   const { data: project, isLoading } = useQuery(
