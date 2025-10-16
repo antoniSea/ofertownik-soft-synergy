@@ -270,17 +270,9 @@ router.post('/:id/followups', [
       });
     }
 
-    const project = await Project.findById(req.params.id)
-      .populate('owner', '_id');
+    const project = await Project.findById(req.params.id);
     if (!project) {
       return res.status(404).json({ message: 'Projekt nie został znaleziony' });
-    }
-
-    // Only owner/creator or admin can add follow-ups
-    const isCreator = project.createdBy.toString() === req.user._id.toString();
-    const isOwner = project.owner && project.owner._id.toString() === req.user._id.toString();
-    if (!isCreator && !isOwner && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Brak uprawnień do dodawania follow-upów' });
     }
 
     if (project.status === 'accepted' || project.status === 'cancelled') {
@@ -330,17 +322,9 @@ router.post('/:id/notes', [
       });
     }
 
-    const project = await Project.findById(req.params.id)
-      .populate('owner', '_id');
+    const project = await Project.findById(req.params.id);
     if (!project) {
       return res.status(404).json({ message: 'Projekt nie został znaleziony' });
-    }
-
-    // Only owner/creator or admin can add notes
-    const isCreator = project.createdBy.toString() === req.user._id.toString();
-    const isOwner = project.owner && project.owner._id.toString() === req.user._id.toString();
-    if (!isCreator && !isOwner && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Brak uprawnień do dodawania notatek' });
     }
 
     const note = { text: req.body.text, author: req.user._id, createdAt: new Date() };
