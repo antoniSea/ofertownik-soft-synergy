@@ -60,6 +60,7 @@ export const projectsAPI = {
   getStats: () => api.get('/api/projects/stats/overview').then(res => res.data),
   addNote: (id, text) => api.post(`/api/projects/${id}/notes`, { text }).then(res => res.data),
   addFollowUp: (id, note) => api.post(`/api/projects/${id}/followups`, { note }).then(res => res.data),
+  assignOwner: (id, ownerId) => api.post(`/api/projects/${id}/assign`, { ownerId }).then(res => res.data),
 };
 
 export const portfolioAPI = {

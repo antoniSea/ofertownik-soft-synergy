@@ -9,7 +9,7 @@ const router = express.Router();
 // Get all projects
 router.get('/', auth, async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, search, offerType } = req.query;
+    const { page = 1, limit = 10, status, search, offerType, owner } = req.query;
     const pageNum = Number.parseInt(page, 10) || 1;
     const limitNum = Number.parseInt(limit, 10) || 10;
     
@@ -24,6 +24,12 @@ router.get('/', auth, async (req, res) => {
       query.offerType = offerType;
     }
     
+    if (owner === 'me') {
+      query.owner = req.user._id;
+    } else if (owner) {
+      query.owner = owner;
+    }
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -34,6 +40,7 @@ router.get('/', auth, async (req, res) => {
 
     const projects = await Project.find(query)
       .populate('createdBy', 'firstName lastName email')
+      .populate('owner', 'firstName lastName email')
       .populate('teamMembers.user', 'firstName lastName email role avatar')
       .sort({ createdAt: -1 })
       .limit(limitNum)
@@ -59,6 +66,7 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('createdBy', 'firstName lastName email')
+      .populate('owner', 'firstName lastName email')
       .populate('notes.author', 'firstName lastName email')
       .populate('followUps.author', 'firstName lastName email')
       .populate('teamMembers.user', 'firstName lastName email role avatar')
@@ -100,7 +108,8 @@ router.post('/', [
 
     const projectData = {
       ...req.body,
-      createdBy: req.user._id
+      createdBy: req.user._id,
+      owner: req.user._id
     };
 
     const project = new Project(projectData);
@@ -211,6 +220,7 @@ router.put('/:id', [
 
     const updatedProject = await Project.findById(project._id)
       .populate('createdBy', 'firstName lastName email')
+      .populate('owner', 'firstName lastName email')
       .populate('teamMembers.user', 'firstName lastName email role avatar')
       .populate('changelog.author', 'firstName lastName email');
 
@@ -221,6 +231,28 @@ router.put('/:id', [
   } catch (error) {
     console.error('Update project error:', error);
     res.status(500).json({ message: 'Błąd serwera podczas aktualizacji projektu' });
+  }
+});
+
+// Reassign owner (admin only)
+router.post('/:id/assign', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Brak uprawnień' });
+    }
+    const { ownerId } = req.body;
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ message: 'Projekt nie został znaleziony' });
+    }
+    project.owner = ownerId;
+    await project.save();
+    const populated = await Project.findById(project._id)
+      .populate('owner', 'firstName lastName email');
+    res.json({ message: 'Przypisano właściciela', project: populated });
+  } catch (e) {
+    console.error('Assign owner error:', e);
+    res.status(500).json({ message: 'Błąd serwera podczas przypisywania właściciela' });
   }
 });
 

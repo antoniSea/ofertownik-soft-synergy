@@ -15,7 +15,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
-import { projectsAPI, offersAPI } from '../services/api';
+import { projectsAPI, offersAPI, authAPI } from '../services/api';
 import { useI18n } from '../contexts/I18nContext';
 import toast from 'react-hot-toast';
 
@@ -29,6 +29,17 @@ const ProjectDetail = () => {
     ['project', id],
     () => projectsAPI.getById(id)
   );
+
+  const { data: users = [] } = useQuery(['users'], authAPI.listUsers);
+
+  const assignOwnerMutation = useMutation(({ ownerId }) => projectsAPI.assignOwner(id, ownerId), {
+    onSuccess: () => {
+      toast.success('Przypisano właściciela');
+      queryClient.invalidateQueries(['project', id]);
+      queryClient.invalidateQueries('projects');
+    },
+    onError: () => toast.error('Nie udało się przypisać właściciela')
+  });
 
   const generateOfferMutation = useMutation(offersAPI.generate, {
     onSuccess: (data) => {
@@ -308,8 +319,22 @@ const ProjectDetail = () => {
               </div>
               <div className="flex items-center">
                 <User className="h-4 w-4 text-gray-400 mr-2" />
-                <span className="text-sm text-gray-900">Created by: {project.createdBy?.fullName}</span>
+                <span className="text-sm text-gray-900">Owner: {project.owner?.firstName ? `${project.owner.firstName} ${project.owner.lastName}` : project.createdBy?.fullName}</span>
               </div>
+              {users.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <select
+                    className="input-field"
+                    defaultValue={project.owner?._id || ''}
+                    onChange={(e) => e.target.value && assignOwnerMutation.mutate({ ownerId: e.target.value })}
+                  >
+                    <option value="">-- Zmień właściciela (admin) --</option>
+                    {users.map(u => (
+                      <option key={u._id} value={u._id}>{u.fullName}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {project.offerNumber && (
                 <div className="flex items-center">
                   <FileText className="h-4 w-4 text-gray-400 mr-2" />
@@ -327,7 +352,7 @@ const ProjectDetail = () => {
                     className="btn-primary w-full flex items-center justify-center"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Pobierz ofertę
+                    {t('buttons.download')}
                   </a>
                 </div>
               )}

@@ -24,6 +24,7 @@ const Projects = () => {
     search: '',
     status: '',
     offerType: '',
+    owner: '',
     page: 1,
   });
 
@@ -116,7 +117,7 @@ const Projects = () => {
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
           <div>
             <label className="form-label">{t('projects.searchLabel')}</label>
             <div className="relative">
@@ -159,10 +160,22 @@ const Projects = () => {
               <option value="preliminary">Preliminary</option>
             </select>
           </div>
+
+          <div>
+            <label className="form-label">Owner</label>
+            <select
+              value={filters.owner}
+              onChange={(e) => setFilters({ ...filters, owner: e.target.value, page: 1 })}
+              className="input-field"
+            >
+              <option value="">{t('projects.allOption')}</option>
+              <option value="me">Only mine</option>
+            </select>
+          </div>
           
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({ search: '', status: '', offerType: '', page: 1 })}
+              onClick={() => setFilters({ search: '', status: '', offerType: '', owner: '', page: 1 })}
               className="btn-secondary w-full"
             >
               <Filter className="h-4 w-4 mr-2" />
@@ -218,7 +231,7 @@ const Projects = () => {
                 <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
                   <div className="flex items-center">
                     <User className="h-4 w-4 mr-1" />
-                    {project.createdBy?.fullName}
+                    {project.owner?.firstName ? `${project.owner.firstName} ${project.owner.lastName}` : project.createdBy?.fullName}
                   </div>
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
