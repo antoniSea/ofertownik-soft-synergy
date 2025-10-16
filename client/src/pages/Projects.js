@@ -15,9 +15,11 @@ import {
   Download
 } from 'lucide-react';
 import { projectsAPI, offersAPI } from '../services/api';
+import { useI18n } from '../contexts/I18nContext';
 import toast from 'react-hot-toast';
 
 const Projects = () => {
+  const { t } = useI18n();
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -100,17 +102,15 @@ const Projects = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Projekty</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Zarządzaj projektami i ofertami
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('projects.header')}</h1>
+          <p className="mt-1 text-sm text-gray-500">{t('projects.subheader')}</p>
         </div>
         <Link
           to="/projects/new"
           className="btn-primary flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Nowy projekt
+          {t('projects.newProject')}
         </Link>
       </div>
 
@@ -118,12 +118,12 @@ const Projects = () => {
       <div className="card">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <div>
-            <label className="form-label">Wyszukaj</label>
+            <label className="form-label">{t('projects.searchLabel')}</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Nazwa projektu, klient..."
+                placeholder={t('projects.searchPlaceholder')}
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
                 className="input-field pl-10"
@@ -132,31 +132,31 @@ const Projects = () => {
           </div>
           
           <div>
-            <label className="form-label">Status</label>
+            <label className="form-label">{t('projects.statusLabel')}</label>
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
               className="input-field"
             >
-              <option value="">Wszystkie</option>
-              <option value="draft">Szkic</option>
-              <option value="active">Aktywny</option>
-              <option value="accepted">Zaakceptowany</option>
-              <option value="completed">Zakończony</option>
-              <option value="cancelled">Anulowany</option>
+              <option value="">{t('projects.allOption')}</option>
+              <option value="draft">{t('projects.status.draft')}</option>
+              <option value="active">{t('projects.status.active')}</option>
+              <option value="accepted">{t('projects.status.accepted')}</option>
+              <option value="completed">{t('projects.status.completed')}</option>
+              <option value="cancelled">{t('projects.status.cancelled')}</option>
             </select>
           </div>
 
           <div>
-            <label className="form-label">Typ oferty</label>
+            <label className="form-label">{t('projects.offerTypeLabel')}</label>
             <select
               value={filters.offerType}
               onChange={(e) => setFilters({ ...filters, offerType: e.target.value, page: 1 })}
               className="input-field"
             >
-              <option value="">Wszystkie</option>
-              <option value="final">Finalna</option>
-              <option value="preliminary">Wstępna</option>
+              <option value="">{t('projects.allOption')}</option>
+              <option value="final">Final</option>
+              <option value="preliminary">Preliminary</option>
             </select>
           </div>
           
@@ -166,7 +166,7 @@ const Projects = () => {
               className="btn-secondary w-full"
             >
               <Filter className="h-4 w-4 mr-2" />
-              Wyczyść filtry
+              {t('projects.clearFilters')}
             </button>
           </div>
         </div>
@@ -301,18 +301,18 @@ const Projects = () => {
         {data?.projects?.length === 0 && (
           <div className="text-center py-12">
             <FolderOpen className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Brak projektów</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">{t('projects.emptyTitle')}</h3>
             <p className="mt-1 text-sm text-gray-500">
               {filters.search || filters.status 
-                ? 'Spróbuj zmienić filtry wyszukiwania.'
-                : 'Rozpocznij od utworzenia pierwszego projektu.'
+                ? t('projects.emptyHintFiltered')
+                : t('projects.emptyHint')
               }
             </p>
             {!filters.search && !filters.status && (
               <div className="mt-6">
                 <Link to="/projects/new" className="btn-primary">
                   <Plus className="h-4 w-4 mr-2" />
-                  Utwórz projekt
+                  {t('projects.createFirst')}
                 </Link>
               </div>
             )}
@@ -331,7 +331,10 @@ const Projects = () => {
             const end = Math.min(currentPage * 10, total);
             return (
               <div className="text-sm text-gray-700">
-                Pokazano {start} do {end} z {total} wyników
+                {t('projects.shownCount')
+                  .replace('{{start}}', start)
+                  .replace('{{end}}', end)
+                  .replace('{{total}}', total)}
               </div>
             );
           })()}
@@ -346,14 +349,14 @@ const Projects = () => {
                     disabled={currentPage <= 1}
                     className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Poprzednia
+                    {t('projects.prev')}
                   </button>
                   <button
                     onClick={() => setFilters({ ...filters, page: Math.min(totalPages, currentPage + 1) })}
                     disabled={currentPage >= totalPages}
                     className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Następna
+                    {t('projects.next')}
                   </button>
                 </>
               );

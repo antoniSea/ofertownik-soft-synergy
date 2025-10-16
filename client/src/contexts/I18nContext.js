@@ -35,6 +35,31 @@ const dictionaries = {
       welcome: 'Witamy w Ofertowniku!',
       getStarted: 'Rozpocznij pracę z systemem zarządzania ofertami',
       now: 'Teraz'
+    },
+    projects: {
+      header: 'Projekty',
+      subheader: 'Zarządzaj projektami i ofertami',
+      searchLabel: 'Wyszukaj',
+      searchPlaceholder: 'Nazwa projektu, klient...',
+      statusLabel: 'Status',
+      offerTypeLabel: 'Typ oferty',
+      allOption: 'Wszystkie',
+      clearFilters: 'Wyczyść filtry',
+      newProject: 'Nowy projekt',
+      status: {
+        draft: 'Szkic',
+        active: 'Aktywny',
+        accepted: 'Zaakceptowany',
+        completed: 'Zakończony',
+        cancelled: 'Anulowany'
+      },
+      emptyTitle: 'Brak projektów',
+      emptyHintFiltered: 'Spróbuj zmienić filtry wyszukiwania.',
+      emptyHint: 'Rozpocznij od utworzenia pierwszego projektu.',
+      createFirst: 'Utwórz projekt',
+      shownCount: 'Pokazano {{start}} do {{end}} z {{total}} wyników',
+      prev: 'Poprzednia',
+      next: 'Następna'
     }
   },
   en: {
@@ -71,6 +96,31 @@ const dictionaries = {
       welcome: 'Welcome to Offer Manager!',
       getStarted: 'Get started managing your offers',
       now: 'Now'
+    },
+    projects: {
+      header: 'Projects',
+      subheader: 'Manage projects and offers',
+      searchLabel: 'Search',
+      searchPlaceholder: 'Project name, client...',
+      statusLabel: 'Status',
+      offerTypeLabel: 'Offer type',
+      allOption: 'All',
+      clearFilters: 'Clear filters',
+      newProject: 'New project',
+      status: {
+        draft: 'Draft',
+        active: 'Active',
+        accepted: 'Accepted',
+        completed: 'Completed',
+        cancelled: 'Cancelled'
+      },
+      emptyTitle: 'No projects',
+      emptyHintFiltered: 'Try adjusting your filters.',
+      emptyHint: 'Start by creating your first project.',
+      createFirst: 'Create project',
+      shownCount: 'Showing {{start}} to {{end}} of {{total}} results',
+      prev: 'Previous',
+      next: 'Next'
     }
   }
 };
