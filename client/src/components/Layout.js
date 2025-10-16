@@ -22,6 +22,7 @@ const Layout = () => {
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Projekty', href: '/projects', icon: FolderOpen },
     { name: 'Portfolio', href: '/portfolio', icon: Image },
+    { name: 'Pracownicy', href: '/employees', icon: User },
   ];
 
   const handleLogout = async () => {

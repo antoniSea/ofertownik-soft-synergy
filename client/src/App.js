@@ -10,6 +10,7 @@ import ProjectForm from './pages/ProjectForm';
 import ProjectDetail from './pages/ProjectDetail';
 import Portfolio from './pages/Portfolio';
 import PortfolioForm from './pages/PortfolioForm';
+import Employees from './pages/Employees';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -39,6 +40,7 @@ function AppContent() {
         <Route path="portfolio" element={<Portfolio />} />
         <Route path="portfolio/new" element={<PortfolioForm />} />
         <Route path="portfolio/:id/edit" element={<PortfolioForm />} />
+        <Route path="employees" element={<Employees />} />
       </Route>
     </Routes>
   );
