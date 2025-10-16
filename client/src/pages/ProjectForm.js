@@ -59,7 +59,8 @@ const ProjectForm = () => {
     notes: [],
     customReservations: [],
     customPaymentTerms: '10% zaliczki po podpisaniu umowy.\n90% po odbiorze końcowym projektu.',
-    consultationNotes: ''
+    consultationNotes: '',
+    language: 'pl'
   });
 
   const { data: project, isLoading } = useQuery(
@@ -491,7 +492,7 @@ const ProjectForm = () => {
         {/* Basic Information */}
         <div className="card">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Informacje podstawowe</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="form-label">Nazwa projektu *</label>
               <input
@@ -556,6 +557,19 @@ const ProjectForm = () => {
               <p className="text-sm text-gray-500 mt-1">
                 Oferta wstępna jest dla klientów w trakcie konsultacji
               </p>
+            </div>
+
+            <div>
+              <label className="form-label">Język oferty</label>
+              <select
+                name="language"
+                value={formData.language}
+                onChange={handleChange}
+                className="input-field"
+              >
+                <option value="pl">Polski</option>
+                <option value="en">English</option>
+              </select>
             </div>
           </div>
         </div>

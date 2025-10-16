@@ -82,6 +82,11 @@ const projectSchema = new mongoose.Schema({
     enum: ['final', 'preliminary'],
     default: 'final'
   },
+  language: {
+    type: String,
+    enum: ['pl', 'en'],
+    default: 'pl'
+  },
   priceRange: {
     min: { type: Number, default: null },
     max: { type: Number, default: null }

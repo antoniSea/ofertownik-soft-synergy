@@ -9,6 +9,84 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Simple i18n dictionary for offer template
+const i18n = {
+  pl: {
+    companyTagline: 'Innowacyjne rozwiązania programistyczne',
+    offerTitle: 'Oferta Projektowa',
+    date: 'Data',
+    number: 'Numer',
+    forLabel: 'Dla:',
+    preliminaryTitle: '📋 Oferta Wstępna / Konsultacja',
+    preliminaryLead: 'Niniejsza oferta ma charakter wstępny i konsultacyjny. Po dokładnym poznaniu Państwa potrzeb i wymagań przygotujemy szczegółową ofertę finalną z precyzyjną wyceną.',
+    greeting: 'Szanowni Państwo,',
+    guardianTitle: 'Państwa Dedykowany Opiekun Projektu',
+    solutionScope: 'Proponowane Rozwiązanie i Zakres Prac',
+    timeline: 'Harmonogram Projektu',
+    investment: 'Inwestycja i Warunki Współpracy',
+    tableStage: 'Etap / Usługa',
+    tableCost: 'Koszt (PLN netto)',
+    totalNet: 'RAZEM (netto)',
+    paymentTerms: 'Warunki Płatności',
+    warrantySupport: 'Gwarancja i Wsparcie',
+    portfolioTitle: 'Nasze Doświadczenie w Praktyce',
+    seeMorePortfolio: 'Zobacz więcej portfolio',
+    nextSteps: 'Kolejne Kroki',
+    prelimNextStepsLead: 'Dziękujemy za zainteresowanie naszymi usługami. Oto jak możemy kontynuować współpracę:',
+    prelimStep1: 'Potwierdzenie zainteresowania i zgoda na dalsze konsultacje.',
+    prelimStep2: 'Szczegółowa analiza wymagań i przygotowanie oferty finalnej.',
+    prelimStep3: 'Prezentacja finalnej oferty z precyzyjną wyceną.',
+    finalNextStepsLead: 'Jesteśmy podekscytowani perspektywą współpracy. Oto jak możemy rozpocząć:',
+    finalStep1: 'Akceptacja oferty poprzez e-mail zwrotny.',
+    finalStep2: 'Podpisanie umowy ramowej o współpracy.',
+    finalStep3: 'Zaplanowanie warsztatu "kick-off" z Państwa opiekunem projektu.',
+    prelimCta: 'Kontynuuję konsultacje',
+    finalCta: 'Akceptuję i rozpoczynam współpracę',
+    downloadOffer: 'Pobierz ofertę',
+    reservations: 'Zastrzeżenia',
+    res1: 'Oferta obejmuje wyłącznie prace wymienione w powyższym zakresie.',
+    res2: 'Dodatkowe modyfikacje lub zmiany w trakcie realizacji mogą wymagać osobnej wyceny.',
+    res3: 'Soft Synergy rozpoczyna realizację w terminie do 3 dni roboczych od potwierdzenia akceptacji oferty.'
+  },
+  en: {
+    companyTagline: 'Innovative Software Solutions',
+    offerTitle: 'Project Offer',
+    date: 'Date',
+    number: 'Number',
+    forLabel: 'For:',
+    preliminaryTitle: '📋 Preliminary Offer / Consultation',
+    preliminaryLead: 'This offer is preliminary and consultative. After understanding your needs, we will prepare a detailed final offer with precise pricing.',
+    greeting: 'Dear Sir/Madam,',
+    guardianTitle: 'Your Dedicated Project Manager',
+    solutionScope: 'Proposed Solution and Scope of Work',
+    timeline: 'Project Timeline',
+    investment: 'Investment and Terms of Cooperation',
+    tableStage: 'Stage / Service',
+    tableCost: 'Cost (PLN net)',
+    totalNet: 'TOTAL (net)',
+    paymentTerms: 'Payment Terms',
+    warrantySupport: 'Warranty and Support',
+    portfolioTitle: 'Our Experience in Practice',
+    seeMorePortfolio: 'See more portfolio',
+    nextSteps: 'Next Steps',
+    prelimNextStepsLead: 'Thank you for your interest. Here is how we can proceed:',
+    prelimStep1: 'Confirm interest and agree to further consultations.',
+    prelimStep2: 'Detailed requirements analysis and preparation of the final offer.',
+    prelimStep3: 'Presentation of the final offer with precise pricing.',
+    finalNextStepsLead: 'We are excited about the prospect of working together. Here is how we can start:',
+    finalStep1: 'Accept the offer via reply email.',
+    finalStep2: 'Sign a framework cooperation agreement.',
+    finalStep3: 'Schedule a kick-off workshop with your project manager.',
+    prelimCta: 'Proceed with consultation',
+    finalCta: 'I accept and want to start',
+    downloadOffer: 'Download offer',
+    reservations: 'Reservations',
+    res1: 'The offer includes only the work listed above.',
+    res2: 'Additional modifications or changes during implementation may require a separate quote.',
+    res3: 'Soft Synergy starts implementation within 3 business days after confirming acceptance of the offer.'
+  }
+};
+
 // Helper function to format date
 handlebars.registerHelper('formatDate', function(date) {
   return new Date(date).toLocaleDateString('pl-PL');
@@ -62,8 +140,12 @@ router.post('/generate/:projectId', auth, async (req, res) => {
       allowProtoPropertiesByDefault: true
     });
 
-    // Prepare data for template
+    // Prepare data for template with language and translations
+    const lang = (project.language === 'en') ? 'en' : 'pl';
+    const t = i18n[lang] || i18n.pl;
     const templateData = {
+      lang,
+      t,
       // Project details
       projectName: project.name,
       clientName: project.clientName,
@@ -242,8 +324,12 @@ router.get('/preview/:projectId', auth, async (req, res) => {
     const templateContent = await fs.readFile(templatePath, 'utf8');
     const template = handlebars.compile(templateContent);
 
-    // Prepare data
+    // Prepare data with language and translations
+    const lang = (project.language === 'en') ? 'en' : 'pl';
+    const t = i18n[lang] || i18n.pl;
     const templateData = {
+      lang,
+      t,
       projectName: project.name,
       clientName: project.clientName,
       clientContact: project.clientContact,

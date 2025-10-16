@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pl" class="scroll-smooth">
+<html lang="{{lang}}" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oferta Projektowa dla {{clientName}} — Soft Synergy</title>
+    <title>{{t.offerTitle}} — {{clientName}} — Soft Synergy</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
     
@@ -61,17 +61,17 @@
             <div class="flex justify-between items-start flex-wrap gap-6">
                 <div>
                     <h1 class="text-3xl font-extrabold">Soft<span class="text-blue-500">Synergy</span></h1>
-                    <p class="text-slate-400 print-text-gray">Innovative Software Solutions</p>
+                    <p class="text-slate-400 print-text-gray">{{t.companyTagline}}</p>
                 </div>
                 <div class="text-left sm:text-right">
-                    <h2 class="text-2xl font-bold text-blue-400">Oferta Projektowa</h2>
-                    <p class="text-slate-400 print-text-gray">Data: <span class="font-semibold text-slate-300 print-text-black">{{offerDate}}</span></p>
-                    <p class="text-slate-400 print-text-gray">Numer: <span class="font-semibold text-slate-300 print-text-black">{{offerNumber}}</span></p>
+                    <h2 class="text-2xl font-bold text-blue-400">{{t.offerTitle}}</h2>
+                    <p class="text-slate-400 print-text-gray">{{t.date}}: <span class="font-semibold text-slate-300 print-text-black">{{offerDate}}</span></p>
+                    <p class="text-slate-400 print-text-gray">{{t.number}}: <span class="font-semibold text-slate-300 print-text-black">{{offerNumber}}</span></p>
                 </div>
             </div>
             <div class="border-t border-white/10 my-6"></div>
             <div>
-                <span class="text-slate-400 print-text-gray">Dla:</span>
+                <span class="text-slate-400 print-text-gray">{{t.forLabel}}</span>
                 <p class="text-xl font-bold">{{clientName}}</p>
                 <p class="text-slate-300 print-text-gray">Do rąk: {{clientContact}}</p>
             </div>
@@ -83,17 +83,14 @@
             <!-- Special section for preliminary offers -->
             <section class="reveal">
                 <div class="glass-card p-8 mb-8 border-l-4 border-yellow-500">
-                    <h2 class="text-2xl font-bold mb-4 text-yellow-400">📋 Oferta Wstępna / Konsultacja</h2>
-                    <p class="text-slate-300 print-text-gray text-lg">
-                        Niniejsza oferta ma charakter wstępny i konsultacyjny. Po dokładnym poznaniu Państwa potrzeb 
-                        i wymagań przygotujemy szczegółową ofertę finalną z precyzyjną wyceną.
-                    </p>
+                    <h2 class="text-2xl font-bold mb-4 text-yellow-400">{{t.preliminaryTitle}}</h2>
+                    <p class="text-slate-300 print-text-gray text-lg">{{t.preliminaryLead}}</p>
                 </div>
             </section>
             {{/if}}
 
             <section class="reveal">
-                <h2 class="text-3xl font-bold mb-4">Szanowni Państwo,</h2>
+                <h2 class="text-3xl font-bold mb-4">{{t.greeting}}</h2>
                 <div class="prose prose-invert max-w-none text-slate-300 text-lg leading-relaxed print-text-gray">
                     <p>Dziękujemy za poświęcony czas i inspirującą rozmowę na temat projektu <strong class="text-white print-text-black">{{projectName}}</strong>. W Soft Synergy rozumiemy, że Państwa celem jest nie tylko stworzenie aplikacji, ale strategiczne wzmocnienie pozycji rynkowej poprzez <strong class="text-white print-text-black">{{mainBenefit}}</strong>.</p>
                     <p>{{description}}</p>
@@ -102,7 +99,7 @@
 
             <!-- PROJECT GUARDIAN -->
             <section class="reveal">
-                <h2 class="text-3xl font-bold mb-8 text-center">Państwa Dedykowany Opiekun Projektu</h2>
+                <h2 class="text-3xl font-bold mb-8 text-center">{{t.guardianTitle}}</h2>
                 <div class="glass-card p-8 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
                     <div class="flex-shrink-0">
                         {{#if projectManager.avatar}}
@@ -132,7 +129,7 @@
             <div class="page-break"></div>
             
             <section class="reveal">
-                <h2 class="text-3xl font-bold mb-8 text-center">Proponowane Rozwiązanie i Zakres Prac</h2>
+                <h2 class="text-3xl font-bold mb-8 text-center">{{t.solutionScope}}</h2>
                 <div class="space-y-8">
                     {{#each modules}}
                     <div class="glass-card p-6 flex items-start gap-6">
@@ -147,7 +144,7 @@
             </section>
             
             <section class="reveal">
-                <h2 class="text-3xl font-bold mb-8 text-center">Harmonogram Projektu</h2>
+                <h2 class="text-3xl font-bold mb-8 text-center">{{t.timeline}}</h2>
                 <div class="grid md:grid-cols-4 gap-x-8 gap-y-12 relative">
                     <div class="absolute top-5 left-0 w-full h-0.5 bg-white/20 hidden md:block"></div>
                     <div class="text-center relative">
@@ -184,13 +181,13 @@
             <div class="page-break"></div>
             
             <section class="reveal">
-                <h2 class="text-3xl font-bold mb-8 text-center">Inwestycja i Warunki Współpracy</h2>
+                <h2 class="text-3xl font-bold mb-8 text-center">{{t.investment}}</h2>
                 <div class="glass-card overflow-hidden print-bg-white">
                     <table class="w-full text-left">
                         <thead class="bg-white/5">
                             <tr>
-                                <th class="p-5 font-semibold">Etap / Usługa</th>
-                                <th class="p-5 text-right font-semibold">Koszt (PLN netto)</th>
+                                <th class="p-5 font-semibold">{{t.tableStage}}</th>
+                                <th class="p-5 text-right font-semibold">{{t.tableCost}}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/10">
@@ -213,7 +210,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="bg-blue-600/80">
-                                <td class="p-5 text-right font-bold text-lg text-white">RAZEM (netto)</td>
+                                <td class="p-5 text-right font-bold text-lg text-white">{{t.totalNet}}</td>
                                 <td class="p-5 text-right font-extrabold text-2xl text-white">
                                     {{#if priceRange.min}}
                                         {{#if priceRange.max}}
@@ -231,19 +228,19 @@
                 </div>
                 <div class="mt-8 grid md:grid-cols-2 gap-8">
                     <div class="glass-card p-6">
-                        <h4 class="font-bold text-lg mb-2">Warunki Płatności</h4>
+                        <h4 class="font-bold text-lg mb-2">{{t.paymentTerms}}</h4>
                         <p class="text-slate-400 print-text-gray">{{#if customPaymentTerms}}{{customPaymentTerms}}{{else}}10% zaliczki po podpisaniu umowy.<br>90% po odbiorze końcowym projektu.{{/if}}</p>
                     </div>
                     <div class="glass-card p-6">
-                        <h4 class="font-bold text-lg mb-2">Gwarancja i Wsparcie</h4>
-                        <p class="text-slate-400 print-text-gray">Oferujemy 3 miesiące gwarancji na poprawę błędów po wdrożeniu oraz opcjonalne pakiety wsparcia technicznego.</p>
+                        <h4 class="font-bold text-lg mb-2">{{t.warrantySupport}}</h4>
+                        <p class="text-slate-400 print-text-gray">{{t.warrantySupport}}</p>
                     </div>
                 </div>
             </section>
             
             {{#if portfolio}}
             <section class="reveal">
-                <h2 class="text-3xl font-bold mb-8 text-center">Nasze Doświadczenie w Praktyce</h2>
+                <h2 class="text-3xl font-bold mb-8 text-center">{{t.portfolioTitle}}</h2>
                 <div class="grid md:grid-cols-2 gap-8" style="perspective: 1000px;">
                     {{#each portfolio}}
                     <div class="card-3d group">
@@ -259,54 +256,54 @@
                 </div>
                 <div class="flex justify-center mt-8">
                     <a href="https://soft-synergy.com/portfolio" target="_blank" rel="noopener" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">
-                        Zobacz więcej portfolio
+                        {{t.seeMorePortfolio}}
                     </a>
                 </div>
             </section>
             {{/if}}
             
             <section class="reveal text-center">
-                <h2 class="text-3xl font-bold mb-4">Kolejne Kroki</h2>
+                <h2 class="text-3xl font-bold mb-4">{{t.nextSteps}}</h2>
                 {{#if (eq offerType 'preliminary')}}
-                <p class="max-w-2xl mx-auto text-slate-300 mb-8 print-text-gray">Dziękujemy za zainteresowanie naszymi usługami. Oto jak możemy kontynuować współpracę:</p>
+                <p class="max-w-2xl mx-auto text-slate-300 mb-8 print-text-gray">{{t.prelimNextStepsLead}}</p>
                 <ol class="text-left max-w-md mx-auto space-y-4 mb-12">
                     <li class="flex items-center gap-4">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 font-bold">1</span>
-                        <span>Potwierdzenie zainteresowania i zgoda na dalsze konsultacje.</span>
+                        <span>{{t.prelimStep1}}</span>
                     </li>
                     <li class="flex items-center gap-4">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 font-bold">2</span>
-                        <span>Szczegółowa analiza wymagań i przygotowanie oferty finalnej.</span>
+                        <span>{{t.prelimStep2}}</span>
                     </li>
                     <li class="flex items-center gap-4">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 font-bold">3</span>
-                        <span>Prezentacja finalnej oferty z precyzyjną wyceną.</span>
+                        <span>{{t.prelimStep3}}</span>
                     </li>
                 </ol>
                 {{else}}
-                <p class="max-w-2xl mx-auto text-slate-300 mb-8 print-text-gray">Jesteśmy podekscytowani perspektywą współpracy. Oto jak możemy rozpocząć:</p>
+                <p class="max-w-2xl mx-auto text-slate-300 mb-8 print-text-gray">{{t.finalNextStepsLead}}</p>
                 <ol class="text-left max-w-md mx-auto space-y-4 mb-12">
                     <li class="flex items-center gap-4">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 font-bold">1</span>
-                        <span>Akceptacja oferty poprzez e-mail zwrotny.</span>
+                        <span>{{t.finalStep1}}</span>
                     </li>
                     <li class="flex items-center gap-4">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 font-bold">2</span>
-                        <span>Podpisanie umowy ramowej o współpracy.</span>
+                        <span>{{t.finalStep2}}</span>
                     </li>
                     <li class="flex items-center gap-4">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 font-bold">3</span>
-                        <span>Zaplanowanie warsztatu "kick-off" z Państwa opiekunem projektu.</span>
+                        <span>{{t.finalStep3}}</span>
                     </li>
                 </ol>
                 {{/if}}
                 <div class="flex flex-col md:flex-row justify-center items-center gap-6 no-print">
                     {{#if (eq offerType 'preliminary')}}
-                    <a href="mailto:{{companyEmail}}?subject=Kontynuacja konsultacji - {{offerNumber}} dla {{clientName}}" class="w-full md:w-auto bg-blue-600 text-white font-bold text-lg py-3 px-8 rounded-lg transition-all duration-300 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">Kontynuuję konsultacje</a>
+                    <a href="mailto:{{companyEmail}}?subject={{t.prelimCta}} - {{offerNumber}} {{clientName}}" class="w-full md:w-auto bg-blue-600 text-white font-bold text-lg py-3 px-8 rounded-lg transition-all duration-300 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">{{t.prelimCta}}</a>
                     {{else}}
-                    <a href="mailto:{{companyEmail}}?subject=Akceptacja oferty {{offerNumber}} dla {{clientName}}" class="w-full md:w-auto bg-blue-600 text-white font-bold text-lg py-3 px-8 rounded-lg transition-all duration-300 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">Akceptuję i rozpoczynam współpracę</a>
+                    <a href="mailto:{{companyEmail}}?subject={{t.finalCta}} - {{offerNumber}} {{clientName}}" class="w-full md:w-auto bg-blue-600 text-white font-bold text-lg py-3 px-8 rounded-lg transition-all duration-300 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">{{t.finalCta}}</a>
                     {{/if}}
-                    <button onclick="downloadHTML(event)" class="w-full md:w-auto bg-white/10 text-white font-semibold py-3 px-8 rounded-lg transition-colors hover:bg-white/20" id="okej">Pobierz ofertę</button>
+                    <button onclick="downloadHTML(event)" class="w-full md:w-auto bg-white/10 text-white font-semibold py-3 px-8 rounded-lg transition-colors hover:bg-white/20" id="okej">{{t.downloadOffer}}</button>
                 </div>
             </section>
         </main>
@@ -315,11 +312,11 @@
             <p class="font-bold print-text-black">Soft Synergy</p>
             <p class="text-sm text-slate-400 print-text-gray">{{companyEmail}} | {{companyPhone}}</p>
             <div class="max-w-2xl mx-auto mt-8 text-left text-xs text-slate-400 print-text-gray bg-white/5 rounded-lg p-4 border border-white/10">
-                <h3 class="font-bold mb-2 text-slate-300 print-text-black">Zastrzeżenia</h3>
+                <h3 class="font-bold mb-2 text-slate-300 print-text-black">{{t.reservations}}</h3>
                 <ul class="list-disc pl-5 space-y-1">
-                    <li>Oferta obejmuje wyłącznie prace wymienione w powyższym zakresie.</li>
-                    <li>Dodatkowe modyfikacje lub zmiany w trakcie realizacji mogą wymagać osobnej wyceny.</li>
-                    <li>Soft Synergy rozpoczyna realizację w terminie do 3 dni roboczych od potwierdzenia akceptacji oferty.</li>
+                    <li>{{t.res1}}</li>
+                    <li>{{t.res2}}</li>
+                    <li>{{t.res3}}</li>
                     {{#if customReservations}}
                         {{#each customReservations}}
                             <li>{{this}}</li>
