@@ -49,6 +49,7 @@ export const authAPI = {
   me: () => api.get('/api/auth/me'),
   register: (userData) => api.post('/api/auth/register', userData),
   listUsers: () => api.get('/api/auth/users').then(res => res.data),
+  deleteUser: (id) => api.delete(`/api/auth/users/${id}`).then(res => res.data),
 };
 
 export const projectsAPI = {

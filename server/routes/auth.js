@@ -179,6 +179,27 @@ router.get('/users', auth, async (req, res) => {
   }
 });
 
+// Delete user (admin only)
+router.delete('/users/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Brak uprawnień' });
+    }
+    if (req.params.id === req.user._id.toString()) {
+      return res.status(400).json({ message: 'Nie możesz usunąć samego siebie' });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Użytkownik nie istnieje' });
+    }
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Użytkownik usunięty' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Błąd serwera podczas usuwania użytkownika' });
+  }
+});
+
 module.exports = router; 
 
 // List users (basic data) for team selection

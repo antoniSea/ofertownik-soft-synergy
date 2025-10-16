@@ -18,6 +18,14 @@ const Employees = () => {
     onError: (e) => alert(e?.response?.data?.message || 'Błąd podczas dodawania użytkownika')
   });
 
+  const deleteMutation = useMutation((id) => authAPI.deleteUser(id), {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+      alert('Użytkownik usunięty');
+    },
+    onError: (e) => alert(e?.response?.data?.message || 'Błąd podczas usuwania użytkownika')
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -43,7 +51,10 @@ const Employees = () => {
                   <div className="font-medium text-gray-900">{u.fullName}</div>
                   <div className="text-sm text-gray-500">{u.email}</div>
                 </div>
-                <span className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">{u.role}</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">{u.role}</span>
+                  <button className="text-red-600 text-xs" onClick={() => deleteMutation.mutate(u._id)}>Usuń</button>
+                </div>
               </div>
             ))}
             {(!users || users.length === 0) && (
