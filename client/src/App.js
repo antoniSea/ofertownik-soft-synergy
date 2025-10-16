@@ -12,6 +12,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import Portfolio from './pages/Portfolio';
 import PortfolioForm from './pages/PortfolioForm';
 import Employees from './pages/Employees';
+import Activity from './pages/Activity';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -42,6 +43,7 @@ function AppContent() {
         <Route path="portfolio/new" element={<PortfolioForm />} />
         <Route path="portfolio/:id/edit" element={<PortfolioForm />} />
         <Route path="employees" element={<Employees />} />
+        <Route path="activity" element={<Activity />} />
       </Route>
     </Routes>
   );

@@ -25,6 +25,7 @@ const Layout = () => {
     { name: t('nav.projects'), href: '/projects', icon: FolderOpen, roles: ['admin','manager','employee'] },
     { name: t('nav.portfolio'), href: '/portfolio', icon: Image, roles: ['admin','manager'] },
     { name: t('nav.employees'), href: '/employees', icon: User, roles: ['admin'] },
+    { name: 'Aktywność', href: '/activity', icon: Settings, roles: ['admin'] },
   ];
 
   const handleLogout = async () => {

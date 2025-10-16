@@ -275,8 +275,10 @@ router.post('/:id/followups', [
       return res.status(404).json({ message: 'Projekt nie został znaleziony' });
     }
 
-    // Only creator or admin can add follow-ups
-    if (project.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // Only owner/creator or admin can add follow-ups
+    const isCreator = project.createdBy.toString() === req.user._id.toString();
+    const isOwner = project.owner && project.owner.toString() === req.user._id.toString();
+    if (!isCreator && !isOwner && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Brak uprawnień do dodawania follow-upów' });
     }
 
@@ -332,8 +334,10 @@ router.post('/:id/notes', [
       return res.status(404).json({ message: 'Projekt nie został znaleziony' });
     }
 
-    // Only creator or admin can add notes for now
-    if (project.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // Only owner/creator or admin can add notes
+    const isCreator = project.createdBy.toString() === req.user._id.toString();
+    const isOwner = project.owner && project.owner.toString() === req.user._id.toString();
+    if (!isCreator && !isOwner && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Brak uprawnień do dodawania notatek' });
     }
 
