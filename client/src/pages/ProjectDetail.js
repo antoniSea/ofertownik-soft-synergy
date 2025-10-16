@@ -11,7 +11,6 @@ import {
   Phone,
   Calendar,
   User,
-  DollarSign,
   CheckCircle,
   Clock,
   AlertCircle
@@ -126,7 +125,7 @@ const ProjectDetail = () => {
           </Link>
           
           <button
-            onClick={() => window.open(`/api/offers/preview/${id}`, '_blank')}
+            onClick={() => window.open(`/api/offers/preview/${id}?lang=${project.language || 'pl'}`, '_blank')}
             className="btn-secondary flex items-center"
           >
             <Eye className="h-4 w-4 mr-2" />

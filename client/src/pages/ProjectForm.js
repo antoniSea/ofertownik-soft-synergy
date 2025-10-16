@@ -464,7 +464,7 @@ const ProjectForm = () => {
             ) : (
               <>
                 <button
-                  onClick={() => window.open(`/api/offers/preview/${id}`, '_blank')}
+                  onClick={() => window.open(`/api/offers/preview/${id}?lang=${formData.language || 'pl'}`, '_blank')}
                   className="btn-secondary flex items-center"
                 >
                   <Eye className="h-4 w-4 mr-2" />

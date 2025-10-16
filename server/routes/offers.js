@@ -141,7 +141,8 @@ router.post('/generate/:projectId', auth, async (req, res) => {
     });
 
     // Prepare data for template with language and translations
-    const lang = (project.language === 'en') ? 'en' : 'pl';
+    const requestedLang = (req.query?.lang || '').toLowerCase();
+    const lang = (requestedLang === 'en' || requestedLang === 'pl') ? requestedLang : ((project.language === 'en') ? 'en' : 'pl');
     const t = i18n[lang] || i18n.pl;
     const templateData = {
       lang,
@@ -325,7 +326,8 @@ router.get('/preview/:projectId', auth, async (req, res) => {
     const template = handlebars.compile(templateContent);
 
     // Prepare data with language and translations
-    const lang = (project.language === 'en') ? 'en' : 'pl';
+    const requestedLang = (req.query?.lang || '').toLowerCase();
+    const lang = (requestedLang === 'en' || requestedLang === 'pl') ? requestedLang : ((project.language === 'en') ? 'en' : 'pl');
     const t = i18n[lang] || i18n.pl;
     const templateData = {
       lang,
