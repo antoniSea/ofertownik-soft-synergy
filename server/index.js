@@ -66,6 +66,20 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/offers', offerRoutes);
 
+// Activities endpoint (recent)
+const Activity = require('./models/Activity');
+app.get('/api/activities/recent', async (req, res) => {
+  try {
+    const items = await Activity.find({})
+      .populate('author', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .limit(20);
+    res.json(items);
+  } catch (e) {
+    res.status(500).json({ message: 'Błąd serwera podczas pobierania aktywności' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

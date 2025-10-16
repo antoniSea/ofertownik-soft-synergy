@@ -87,3 +87,7 @@ export const offersAPI = {
   generateContract: (projectId, customText) => api.post(`/api/offers/generate-contract/${projectId}`, { customText }).then(res => res.data),
 
 }; 
+
+export const activityAPI = {
+  recent: () => api.get('/api/activities/recent').then(res => res.data),
+};

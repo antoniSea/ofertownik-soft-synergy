@@ -10,11 +10,12 @@ import {
   Calendar,
   DollarSign
 } from 'lucide-react';
-import { projectsAPI } from '../services/api';
+import { projectsAPI, activityAPI } from '../services/api';
 import { useI18n } from '../contexts/I18nContext';
 
 const Dashboard = () => {
   const { data: stats, isLoading } = useQuery('projectStats', projectsAPI.getStats);
+  const { data: recent = [] } = useQuery('recentActivities', activityAPI.recent);
   const { t } = useI18n();
 
   const cards = [
@@ -146,22 +147,25 @@ const Dashboard = () => {
         <h2 className="text-lg font-medium text-gray-900 mb-4">{t('dashboard.recentActivity')}</h2>
         <div className="card">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                    <Calendar className="h-4 w-4 text-primary-600" />
+            {recent.length === 0 && (
+              <div className="text-sm text-gray-500">No activity yet.</div>
+            )}
+            {recent.map((a) => (
+              <div key={a._id} className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                      <Calendar className="h-4 w-4 text-primary-600" />
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">{a.message}</p>
+                    <p className="text-sm text-gray-500">{a.author?.firstName} {a.author?.lastName}</p>
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">{t('dashboard.welcome')}</p>
-                  <p className="text-sm text-gray-500">{t('dashboard.getStarted')}</p>
-                </div>
+                <div className="text-sm text-gray-500">{new Date(a.createdAt).toLocaleString('pl-PL')}</div>
               </div>
-              <div className="text-sm text-gray-500">
-                {t('dashboard.now')}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

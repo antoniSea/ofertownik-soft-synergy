@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Project = require('../models/Project');
 const { auth, requireRole } = require('../middleware/auth');
+const Activity = require('../models/Activity');
 
 const router = express.Router();
 
@@ -112,6 +113,18 @@ router.post('/', [
     }];
     await project.save();
 
+    // Log activity
+    try {
+      await Activity.create({
+        action: 'project.created',
+        entityType: 'project',
+        entityId: project._id,
+        author: req.user._id,
+        message: `Project created: "${project.name}"`,
+        metadata: { status: project.status }
+      });
+    } catch (e) {}
+
     const populatedProject = await Project.findById(project._id)
       .populate('createdBy', 'firstName lastName email');
 
@@ -181,6 +194,16 @@ router.put('/:id', [
         project.changelog = project.changelog || [];
         project.changelog.unshift({ action: 'update', fields: changed, author: req.user._id, createdAt: new Date() });
         await project.save();
+        try {
+          await Activity.create({
+            action: 'project.updated',
+            entityType: 'project',
+            entityId: project._id,
+            author: req.user._id,
+            message: `Project updated: "${project.name}"`,
+            metadata: { fields: changed }
+          });
+        } catch (e) {}
       }
     } catch (e) {
       // best-effort logging, do not fail

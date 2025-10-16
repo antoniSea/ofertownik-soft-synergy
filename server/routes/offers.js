@@ -5,6 +5,7 @@ const path = require('path');
 const handlebars = require('handlebars');
 const Project = require('../models/Project');
 const Portfolio = require('../models/Portfolio');
+const Activity = require('../models/Activity');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -283,6 +284,20 @@ router.post('/generate/:projectId', auth, async (req, res) => {
     // Update project with generated offer URL
     project.generatedOfferUrl = `/generated-offers/${fileName}`;
     await project.save();
+
+    // Log activity
+    try {
+      await Activity.create({
+        action: 'offer.generated',
+        entityType: 'project',
+        entityId: project._id,
+        author: req.user._id,
+        message: `Offer generated for project "${project.name}"`,
+        metadata: { htmlUrl: `/generated-offers/${fileName}`, pdfUrl }
+      });
+    } catch (e) {
+      // ignore logging errors
+    }
 
     // Add cache-busting headers
     res.set({
@@ -612,6 +627,18 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
     project.contractPdfUrl = `/generated-offers/${pdfFileName}`;
     project.status = 'accepted';
     await project.save();
+
+    // Log activity
+    try {
+      await Activity.create({
+        action: 'contract.generated',
+        entityType: 'project',
+        entityId: project._id,
+        author: req.user._id,
+        message: `Contract generated and project accepted: "${project.name}"`,
+        metadata: { contractPdfUrl: project.contractPdfUrl }
+      });
+    } catch (e) {}
 
     // Response with URLs
     res.set({

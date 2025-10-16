@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const Activity = require('../models/Activity');
 
 const router = express.Router();
 
@@ -36,9 +37,18 @@ router.post('/login', [
       return res.status(401).json({ message: 'Konto jest nieaktywne' });
     }
 
-    // Update last login
+    // Update last login and log activity
     user.lastLogin = new Date();
     await user.save();
+    try {
+      await Activity.create({
+        action: 'user.login',
+        entityType: 'user',
+        entityId: user._id,
+        author: user._id,
+        message: `User logged in: ${user.email}`
+      });
+    } catch (e) {}
 
     const token = jwt.sign(
       { userId: user._id },
