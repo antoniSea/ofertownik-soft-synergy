@@ -148,4 +148,28 @@ router.post('/logout', auth, (req, res) => {
   res.json({ message: 'Wylogowano pomyślnie' });
 });
 
+// List users (basic data) for team selection
+router.get('/users', auth, async (req, res) => {
+  try {
+    const users = await User.find({ isActive: true })
+      .select('firstName lastName email role avatar')
+      .sort({ firstName: 1, lastName: 1 });
+    res.json(users.map(u => ({
+      _id: u._id,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      fullName: `${u.firstName} ${u.lastName}`,
+      email: u.email,
+      role: u.role,
+      avatar: u.avatar
+    })));
+  } catch (error) {
+    console.error('List users error:', error);
+    res.status(500).json({ message: 'Błąd serwera podczas pobierania użytkowników' });
+  }
+});
+
 module.exports = router; 
+
+// List users (basic data) for team selection
+// Note: export an additional router is not valid; append before module.exports if needed.

@@ -48,6 +48,7 @@ export const authAPI = {
   logout: () => api.post('/api/auth/logout'),
   me: () => api.get('/api/auth/me'),
   register: (userData) => api.post('/api/auth/register', userData),
+  listUsers: () => api.get('/api/auth/users').then(res => res.data),
 };
 
 export const projectsAPI = {

@@ -33,6 +33,7 @@ router.get('/', auth, async (req, res) => {
 
     const projects = await Project.find(query)
       .populate('createdBy', 'firstName lastName email')
+      .populate('teamMembers.user', 'firstName lastName email role avatar')
       .sort({ createdAt: -1 })
       .limit(limitNum)
       .skip((pageNum - 1) * limitNum)
@@ -58,7 +59,9 @@ router.get('/:id', auth, async (req, res) => {
     const project = await Project.findById(req.params.id)
       .populate('createdBy', 'firstName lastName email')
       .populate('notes.author', 'firstName lastName email')
-      .populate('followUps.author', 'firstName lastName email');
+      .populate('followUps.author', 'firstName lastName email')
+      .populate('teamMembers.user', 'firstName lastName email role avatar')
+      .populate('changelog.author', 'firstName lastName email');
     
     if (!project) {
       return res.status(404).json({ message: 'Projekt nie został znaleziony' });
@@ -100,6 +103,13 @@ router.post('/', [
     };
 
     const project = new Project(projectData);
+    // Init changelog
+    project.changelog = [{
+      action: 'create',
+      fields: Object.keys(projectData || {}),
+      author: req.user._id,
+      createdAt: new Date()
+    }];
     await project.save();
 
     const populatedProject = await Project.findById(project._id)
@@ -154,11 +164,32 @@ router.put('/:id', [
       delete req.body.status;
     }
 
+    const before = project.toObject();
     Object.assign(project, req.body);
     await project.save();
 
+    // Compute changed fields for changelog (shallow compare top-level keys)
+    try {
+      const changed = [];
+      for (const key of Object.keys(req.body || {})) {
+        const beforeVal = before[key];
+        const afterVal = project[key];
+        const isEqual = JSON.stringify(beforeVal) === JSON.stringify(afterVal);
+        if (!isEqual) changed.push(key);
+      }
+      if (changed.length) {
+        project.changelog = project.changelog || [];
+        project.changelog.unshift({ action: 'update', fields: changed, author: req.user._id, createdAt: new Date() });
+        await project.save();
+      }
+    } catch (e) {
+      // best-effort logging, do not fail
+    }
+
     const updatedProject = await Project.findById(project._id)
-      .populate('createdBy', 'firstName lastName email');
+      .populate('createdBy', 'firstName lastName email')
+      .populate('teamMembers.user', 'firstName lastName email role avatar')
+      .populate('changelog.author', 'firstName lastName email');
 
     res.json({
       message: 'Projekt został zaktualizowany pomyślnie',

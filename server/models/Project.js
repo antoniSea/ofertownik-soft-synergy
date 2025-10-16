@@ -188,7 +188,17 @@ const projectSchema = new mongoose.Schema({
   consultationNotes: {
     type: String,
     default: ''
-  }
+  },
+  teamMembers: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    role: { type: String, default: 'member' }
+  }],
+  changelog: [{
+    action: { type: String, required: true },
+    fields: { type: [String], default: [] },
+    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    createdAt: { type: Date, default: Date.now }
+  }]
 }, {
   timestamps: true
 });

@@ -237,6 +237,25 @@ const ProjectDetail = () => {
             </div>
           </div>
 
+        {/* Team Members */}
+        <div className="card">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Zespół projektowy</h2>
+          <div className="space-y-2">
+            {(project.teamMembers || []).map((m, idx) => (
+              <div key={idx} className="flex items-center justify-between">
+                <div className="text-sm">
+                  <div className="font-medium">{m.user?.firstName} {m.user?.lastName}</div>
+                  <div className="text-gray-500">{m.user?.email}</div>
+                </div>
+                <span className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">{m.role || 'member'}</span>
+              </div>
+            ))}
+            {(!project.teamMembers || project.teamMembers.length === 0) && (
+              <p className="text-sm text-gray-500">Brak przypisanych członków zespołu.</p>
+            )}
+          </div>
+        </div>
+
           {/* Project Manager */}
           <div className="card">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Opiekun projektu</h2>
@@ -321,6 +340,28 @@ const ProjectDetail = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Changelog */}
+        <div className="card">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Historia zmian</h2>
+          <div className="space-y-3">
+            {(project.changelog || []).map((c, idx) => (
+              <div key={idx} className="border rounded p-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">{c.action}</div>
+                  <div className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString('pl-PL')}</div>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">{c.author?.firstName} {c.author?.lastName}</div>
+                {Array.isArray(c.fields) && c.fields.length > 0 && (
+                  <div className="text-xs text-gray-600 mt-1">Pola: {c.fields.join(', ')}</div>
+                )}
+              </div>
+            ))}
+            {(!project.changelog || project.changelog.length === 0) && (
+              <p className="text-sm text-gray-500">Brak zmian.</p>
+            )}
           </div>
         </div>
       </div>

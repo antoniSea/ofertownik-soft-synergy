@@ -10,7 +10,7 @@ import {
   Eye,
   Send
 } from 'lucide-react';
-import { projectsAPI, offersAPI } from '../services/api';
+import { projectsAPI, offersAPI, authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 const ProjectForm = () => {
@@ -67,6 +67,11 @@ const ProjectForm = () => {
     ['project', id],
     () => projectsAPI.getById(id),
     { enabled: isEditing }
+  );
+
+  const { data: users } = useQuery(
+    ['users'],
+    authAPI.listUsers
   );
 
   const createMutation = useMutation(projectsAPI.create, {
@@ -570,6 +575,77 @@ const ProjectForm = () => {
                 <option value="pl">Polski</option>
                 <option value="en">English</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Team members */}
+        <div className="card">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Zespół projektowy</h2>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="form-label">Dodaj członka zespołu</label>
+                <select
+                  className="input-field"
+                  onChange={(e) => {
+                    const userId = e.target.value;
+                    if (!userId) return;
+                    const selected = users?.find(u => u._id === userId);
+                    if (!selected) return;
+                    setFormData(prev => ({
+                      ...prev,
+                      teamMembers: Array.isArray(prev.teamMembers) ? [...prev.teamMembers, { user: selected._id, role: 'member' }] : [{ user: selected._id, role: 'member' }]
+                    }));
+                    e.target.value = '';
+                  }}
+                >
+                  <option value="">Wybierz użytkownika</option>
+                  {users?.map(u => (
+                    <option key={u._id} value={u._id}>{u.fullName} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {(formData.teamMembers || []).map((m, idx) => {
+                const user = users?.find(u => u._id === (m.user?._id || m.user))
+                return (
+                  <div key={idx} className="flex items-center justify-between border rounded-lg p-3">
+                    <div className="text-sm">
+                      <div className="font-medium">{user?.fullName || m.user?.fullName || 'Użytkownik'}</div>
+                      <div className="text-gray-500">{user?.email || m.user?.email || ''}</div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <select
+                        className="input-field"
+                        value={m.role || 'member'}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          teamMembers: prev.teamMembers.map((tm, i) => i === idx ? { ...tm, role: e.target.value } : tm)
+                        }))}
+                      >
+                        <option value="member">Członek</option>
+                        <option value="manager">Manager</option>
+                        <option value="lead">Lead</option>
+                      </select>
+                      <button
+                        type="button"
+                        className="text-red-600 hover:text-red-800"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          teamMembers: prev.teamMembers.filter((_, i) => i !== idx)
+                        }))}
+                      >
+                        Usuń
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {(!formData.teamMembers || formData.teamMembers.length === 0) && (
+                <p className="text-sm text-gray-500">Brak członków zespołu. Dodaj użytkowników powyżej.</p>
+              )}
             </div>
           </div>
         </div>
