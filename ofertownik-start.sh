@@ -17,6 +17,11 @@ if screen -list | grep -q "\.${SESSION_NAME}\t"; then
   exit 0
 fi
 
+# Free port 5001 before starting
+if [ -x "$PROJECT_ROOT/free-port-5001.sh" ]; then
+  "$PROJECT_ROOT/free-port-5001.sh"
+fi
+
 # Start server in a detached screen session
 echo "Starting ofertownik in screen session '$SESSION_NAME'..."
 screen -dmS "$SESSION_NAME" bash -lc "npm run start 2>&1 | tee -a $PROJECT_ROOT/ofertownik.log"

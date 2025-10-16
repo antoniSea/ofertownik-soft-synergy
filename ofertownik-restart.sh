@@ -13,6 +13,11 @@ if screen -list | grep -q "\.${SESSION_NAME}\t"; then
   sleep 1
 fi
 
+# Free port 5001 before starting
+if [ -x "$PROJECT_ROOT/free-port-5001.sh" ]; then
+  "$PROJECT_ROOT/free-port-5001.sh"
+fi
+
 echo "Starting fresh session '$SESSION_NAME'..."
 screen -dmS "$SESSION_NAME" bash -lc "npm run start 2>&1 | tee -a $PROJECT_ROOT/ofertownik.log"
 

@@ -21,6 +21,7 @@ const Projects = () => {
   const [filters, setFilters] = useState({
     search: '',
     status: '',
+    offerType: '',
     page: 1,
   });
 
@@ -115,7 +116,7 @@ const Projects = () => {
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <div>
             <label className="form-label">Wyszukaj</label>
             <div className="relative">
@@ -145,10 +146,23 @@ const Projects = () => {
               <option value="cancelled">Anulowany</option>
             </select>
           </div>
+
+          <div>
+            <label className="form-label">Typ oferty</label>
+            <select
+              value={filters.offerType}
+              onChange={(e) => setFilters({ ...filters, offerType: e.target.value, page: 1 })}
+              className="input-field"
+            >
+              <option value="">Wszystkie</option>
+              <option value="final">Finalna</option>
+              <option value="preliminary">Wstępna</option>
+            </select>
+          </div>
           
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({ search: '', status: '', page: 1 })}
+              onClick={() => setFilters({ search: '', status: '', offerType: '', page: 1 })}
               className="btn-secondary w-full"
             >
               <Filter className="h-4 w-4 mr-2" />

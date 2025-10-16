@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all projects
 router.get('/', auth, async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, search } = req.query;
+    const { page = 1, limit = 10, status, search, offerType } = req.query;
     const pageNum = Number.parseInt(page, 10) || 1;
     const limitNum = Number.parseInt(limit, 10) || 10;
     
@@ -16,6 +16,11 @@ router.get('/', auth, async (req, res) => {
     
     if (status) {
       query.status = status;
+    }
+    
+    // Filter by offer type if provided ("final" | "preliminary")
+    if (offerType) {
+      query.offerType = offerType;
     }
     
     if (search) {
