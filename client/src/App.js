@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, AuthProvider } from './contexts/AuthContext';
+import { I18nProvider } from './contexts/I18nContext';
 import Login from './pages/Login';
 import AdminApp from './pages/AdminApp.jsx';
 import EmployeeApp from './pages/EmployeeApp.jsx';
@@ -49,7 +50,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <I18nProvider>
+        <AppContent />
+      </I18nProvider>
     </AuthProvider>
   );
 }

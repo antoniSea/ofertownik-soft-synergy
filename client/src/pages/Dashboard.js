@@ -3,7 +3,6 @@ import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import { 
   FolderOpen, 
-  Users, 
   TrendingUp, 
   Plus,
   Eye,
@@ -12,31 +11,33 @@ import {
   DollarSign
 } from 'lucide-react';
 import { projectsAPI } from '../services/api';
+import { useI18n } from '../contexts/I18nContext';
 
 const Dashboard = () => {
   const { data: stats, isLoading } = useQuery('projectStats', projectsAPI.getStats);
+  const { t } = useI18n();
 
   const cards = [
     {
-      name: 'Wszystkie projekty',
+      name: t('dashboard.allProjects'),
       value: stats?.totalProjects || 0,
       icon: FolderOpen,
       color: 'bg-blue-500',
     },
     {
-      name: 'Aktywne projekty',
+      name: t('dashboard.activeProjects'),
       value: stats?.stats?.find(s => s._id === 'active')?.count || 0,
       icon: TrendingUp,
       color: 'bg-green-500',
     },
     {
-      name: 'Wartość projektów',
+      name: t('dashboard.projectsValue'),
       value: `${((stats?.totalValue || 0) / 1000).toFixed(0)}k PLN`,
       icon: DollarSign,
       color: 'bg-purple-500',
     },
     {
-      name: 'Oferty wygenerowane',
+      name: t('dashboard.offersGenerated'),
       value: stats?.stats?.find(s => s._id === 'completed')?.count || 0,
       icon: FileText,
       color: 'bg-orange-500',
@@ -45,22 +46,22 @@ const Dashboard = () => {
 
   const quickActions = [
     {
-      name: 'Nowy projekt',
-      description: 'Utwórz nowy projekt i ofertę',
+      name: t('dashboard.actionNew'),
+      description: t('dashboard.actionNewDesc'),
       href: '/projects/new',
       icon: Plus,
       color: 'bg-primary-600',
     },
     {
-      name: 'Przeglądaj projekty',
-      description: 'Zobacz wszystkie projekty',
+      name: t('dashboard.actionBrowse'),
+      description: t('dashboard.actionBrowseDesc'),
       href: '/projects',
       icon: Eye,
       color: 'bg-blue-600',
     },
     {
-      name: 'Zarządzaj portfolio',
-      description: 'Edytuj portfolio projektów',
+      name: t('dashboard.actionPortfolio'),
+      description: t('dashboard.actionPortfolioDesc'),
       href: '/portfolio',
       icon: FolderOpen,
       color: 'bg-green-600',
@@ -79,10 +80,8 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Przegląd projektów i statystyk
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.header')}</h1>
+        <p className="mt-1 text-sm text-gray-500">{t('dashboard.subheader')}</p>
       </div>
 
       {/* Stats Cards */}
@@ -113,7 +112,7 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Szybkie akcje</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">{t('dashboard.quickActions')}</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quickActions.map((action) => {
             const Icon = action.icon;
@@ -144,7 +143,7 @@ const Dashboard = () => {
 
       {/* Recent Activity */}
       <div>
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Ostatnia aktywność</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">{t('dashboard.recentActivity')}</h2>
         <div className="card">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -155,16 +154,12 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">
-                    Witamy w Ofertowniku!
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Rozpocznij pracę z systemem zarządzania ofertami
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">{t('dashboard.welcome')}</p>
+                  <p className="text-sm text-gray-500">{t('dashboard.getStarted')}</p>
                 </div>
               </div>
               <div className="text-sm text-gray-500">
-                Teraz
+                {t('dashboard.now')}
               </div>
             </div>
           </div>
