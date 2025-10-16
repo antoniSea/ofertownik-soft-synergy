@@ -68,8 +68,12 @@ app.use('/api/offers', offerRoutes);
 
 // Activities endpoint (recent)
 const Activity = require('./models/Activity');
-app.get('/api/activities/recent', async (req, res) => {
+const { auth } = require('./middleware/auth');
+app.get('/api/activities/recent', auth, async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Brak uprawnień' });
+    }
     const items = await Activity.find({})
       .populate('author', 'firstName lastName email')
       .sort({ createdAt: -1 })

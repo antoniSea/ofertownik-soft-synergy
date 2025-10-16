@@ -21,10 +21,10 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigation = [
-    { name: t('nav.dashboard'), href: '/dashboard', icon: Home },
-    { name: t('nav.projects'), href: '/projects', icon: FolderOpen },
-    { name: t('nav.portfolio'), href: '/portfolio', icon: Image },
-    { name: t('nav.employees'), href: '/employees', icon: User },
+    { name: t('nav.dashboard'), href: '/dashboard', icon: Home, roles: ['admin','manager','employee'] },
+    { name: t('nav.projects'), href: '/projects', icon: FolderOpen, roles: ['admin','manager','employee'] },
+    { name: t('nav.portfolio'), href: '/portfolio', icon: Image, roles: ['admin','manager'] },
+    { name: t('nav.employees'), href: '/employees', icon: User, roles: ['admin'] },
   ];
 
   const handleLogout = async () => {
@@ -50,7 +50,7 @@ const Layout = () => {
             </button>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
+            {navigation.filter(n => !n.roles || n.roles.includes(user?.role)).map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -99,7 +99,7 @@ const Layout = () => {
             <h1 className="text-xl font-bold text-gray-900">{t('common.appName')}</h1>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
+            {navigation.filter(n => !n.roles || n.roles.includes(user?.role)).map((item) => {
               const Icon = item.icon;
               return (
                 <Link
