@@ -51,6 +51,25 @@ const ProjectDetail = () => {
     }
   });
 
+  const generatePdfMutation = useMutation(offersAPI.generatePdf, {
+    onSuccess: (response) => {
+      toast.success('PDF oferty został wygenerowany pomyślnie!');
+      
+      // Automatycznie pobierz PDF
+      if (response.pdfUrl) {
+        const link = document.createElement('a');
+        link.href = `https:///oferty.soft-synergy.com${response.pdfUrl}`;
+        link.download = response.fileName || 'oferta.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      queryClient.invalidateQueries(['project', id]);
+    },
+    onError: () => toast.error('Błąd podczas generowania PDF')
+  });
+
   const getStatusConfig = (status) => {
     const configs = {
       draft: { 
@@ -344,7 +363,7 @@ const ProjectDetail = () => {
                 </div>
               )}
               {project.generatedOfferUrl && (
-                <div className="pt-3">
+                <div className="pt-3 space-y-2">
                   <a
                     href={`https:///oferty.soft-synergy.com${project.generatedOfferUrl}`}
                     target="_blank"
@@ -352,8 +371,28 @@ const ProjectDetail = () => {
                     className="btn-primary w-full flex items-center justify-center"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    {t('buttons.download')}
+                    Pobierz ofertę HTML
                   </a>
+                  {project.pdfUrl ? (
+                    <a
+                      href={`https:///oferty.soft-synergy.com${project.pdfUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary w-full flex items-center justify-center"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Pobierz ofertę PDF
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => generatePdfMutation.mutate(id)}
+                      disabled={generatePdfMutation.isLoading}
+                      className="btn-secondary w-full flex items-center justify-center"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      {generatePdfMutation.isLoading ? 'Generuję PDF...' : 'Generuj i pobierz PDF'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

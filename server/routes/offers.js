@@ -283,8 +283,11 @@ router.post('/generate/:projectId', auth, async (req, res) => {
       console.log('Continuing with HTML generation only');
     }
 
-    // Update project with generated offer URL
+    // Update project with generated offer URL and PDF URL
     project.generatedOfferUrl = `/generated-offers/${fileName}`;
+    if (pdfUrl) {
+      project.pdfUrl = pdfUrl;
+    }
     await project.save();
 
     // Log activity
@@ -411,6 +414,257 @@ router.get('/professional-url/:projectId', auth, async (req, res) => {
   } catch (error) {
     console.error('Generate professional URL error:', error);
     res.status(500).json({ message: 'Błąd serwera podczas generowania profesjonalnego linku' });
+  }
+});
+
+// Generate PDF only endpoint
+router.post('/generate-pdf/:projectId', auth, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId)
+      .populate('createdBy', 'firstName lastName email');
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Projekt nie został znaleziony' });
+    }
+
+    // Get portfolio items for the offer
+    const portfolio = await Portfolio.find({ isActive: true })
+      .sort({ order: 1 })
+      .limit(2);
+
+    // Read the HTML template
+    const templatePath = path.join(__dirname, '../templates/offer-template.html');
+    const templateContent = await fs.readFile(templatePath, 'utf8');
+
+    // Compile template with Handlebars
+    const template = handlebars.compile(templateContent);
+    
+    // Prepare data for template with language and translations
+    const requestedLang = (req.query?.lang || '').toLowerCase();
+    const lang = (requestedLang === 'en' || requestedLang === 'pl') ? requestedLang : ((project.language === 'en') ? 'en' : 'pl');
+    const t = i18n[lang] || i18n.pl;
+    const templateData = {
+      lang,
+      t,
+      // Project details
+      projectName: project.name,
+      clientName: project.clientName,
+      clientContact: project.clientContact,
+      clientEmail: project.clientEmail,
+      clientPhone: project.clientPhone,
+      description: project.description,
+      mainBenefit: project.mainBenefit,
+      // Offer details
+      offerDate: new Date().toLocaleDateString('pl-PL'),
+      offerNumber: project.offerNumber || `SS/${new Date().getFullYear()}/${(new Date().getMonth()+1).toString().padStart(2, '0')}/${project._id.toString().slice(-4)}`,
+      offerType: project.offerType || 'final',
+      priceRange: project.priceRange,
+      // Project manager - zawsze Jakub Czajka
+      projectManager: {
+        name: "Jakub Czajka",
+        position: "Senior Project Manager",
+        email: "jakub.czajka@soft-synergy.com",
+        phone: "+48 793 868 886",
+        avatar: "/generated-offers/jakub czajka.jpeg",
+        description: "Nazywam się Jakub Czajka i pełnię rolę menedżera projektów w Soft Synergy. Specjalizuję się w koordynowaniu zespołów oraz zarządzaniu realizacją nowoczesnych projektów IT. Dbam o sprawną komunikację, terminowość oraz najwyższą jakość dostarczanych rozwiązań. Moim celem jest zapewnienie klientom profesjonalnej obsługi i skutecznej realizacji ich celów biznesowych."
+      },
+      // Modules
+      modules: project.modules && project.modules.length > 0 ? 
+        project.modules.map(module => ({
+          name: module.name,
+          description: module.description,
+          color: module.color || 'blue'
+        })) : 
+        [{ name: 'Moduł przykładowy', description: 'Opis przykładowego modułu', color: 'blue' }],
+      // Timeline
+      timeline: project.timeline,
+      // Pricing
+      pricing: project.pricing,
+      // Portfolio items
+      portfolio: portfolio.map(item => ({
+        _id: item._id.toString(),
+        title: item.title,
+        description: item.description,
+        image: item.image,
+        category: item.category,
+        technologies: item.technologies,
+        client: item.client,
+        duration: item.duration,
+        results: item.results,
+        isActive: item.isActive,
+        order: item.order
+      })),
+      // Custom reservations
+      customReservations: project.customReservations || [],
+      // Custom payment terms
+      customPaymentTerms: project.customPaymentTerms || '10% zaliczki po podpisaniu umowy.\n90% po odbiorze końcowym projektu.',
+      // Company details
+      companyEmail: 'jakub.czajka@soft-synergy.com',
+      companyPhone: '+48 793 868 886',
+      companyNIP: '123-456-78-90'
+    };
+
+    // Generate HTML
+    const html = template(templateData);
+
+    // Create generated-offers directory if it doesn't exist
+    const outputDir = path.join(__dirname, '../generated-offers');
+    await fs.mkdir(outputDir, { recursive: true });
+
+    // Clean up old PDF files for this project
+    try {
+      const existingFiles = await fs.readdir(outputDir);
+      const projectPdfFiles = existingFiles.filter(file => file.startsWith(`offer-${project._id}-`) && file.endsWith('.pdf'));
+      
+      // Delete old PDF files for this project
+      for (const oldPdfFile of projectPdfFiles) {
+        const oldPdfFilePath = path.join(outputDir, oldPdfFile);
+        await fs.unlink(oldPdfFilePath);
+        console.log(`Deleted old PDF file: ${oldPdfFile}`);
+      }
+    } catch (pdfCleanupError) {
+      console.error('Error cleaning up old PDF files:', pdfCleanupError);
+    }
+
+    // Generate PDF using pdfkit
+    const PDFDocument = require('pdfkit');
+    const pdfFileName = `offer-${project._id}-${Date.now()}.pdf`;
+    const pdfPath = path.join(outputDir, pdfFileName);
+
+    await new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ 
+          size: 'A4', 
+          margins: { top: 50, left: 50, right: 50, bottom: 50 } 
+        });
+        const stream = require('fs').createWriteStream(pdfPath);
+        doc.pipe(stream);
+
+        // Title
+        doc.fontSize(20).text(`Oferta: ${project.name}`, { align: 'center' });
+        doc.moveDown(1);
+        
+        // Client info
+        doc.fontSize(14).text(`Klient: ${project.clientName}`, { align: 'left' });
+        if (project.clientEmail) {
+          doc.text(`Email: ${project.clientEmail}`, { align: 'left' });
+        }
+        if (project.clientPhone) {
+          doc.text(`Telefon: ${project.clientPhone}`, { align: 'left' });
+        }
+        doc.moveDown(1);
+
+        // Offer number and date
+        doc.fontSize(12).text(`Numer oferty: ${templateData.offerNumber}`, { align: 'left' });
+        doc.text(`Data: ${templateData.offerDate}`, { align: 'left' });
+        doc.moveDown(1);
+
+        // Description
+        if (project.description) {
+          doc.fontSize(14).text('Opis projektu:', { align: 'left' });
+          doc.fontSize(12).text(project.description, { align: 'left' });
+          doc.moveDown(1);
+        }
+
+        // Modules
+        if (project.modules && project.modules.length > 0) {
+          doc.fontSize(14).text('Zakres prac:', { align: 'left' });
+          project.modules.forEach((module, index) => {
+            doc.fontSize(12).text(`${index + 1}. ${module.name}`, { align: 'left' });
+            if (module.description) {
+              doc.fontSize(10).text(`   ${module.description}`, { align: 'left' });
+            }
+          });
+          doc.moveDown(1);
+        }
+
+        // Timeline
+        if (project.timeline) {
+          doc.fontSize(14).text('Harmonogram:', { align: 'left' });
+          if (project.timeline.phase1) {
+            doc.fontSize(12).text(`• ${project.timeline.phase1.name}: ${project.timeline.phase1.duration}`, { align: 'left' });
+          }
+          if (project.timeline.phase2) {
+            doc.fontSize(12).text(`• ${project.timeline.phase2.name}: ${project.timeline.phase2.duration}`, { align: 'left' });
+          }
+          if (project.timeline.phase3) {
+            doc.fontSize(12).text(`• ${project.timeline.phase3.name}: ${project.timeline.phase3.duration}`, { align: 'left' });
+          }
+          if (project.timeline.phase4) {
+            doc.fontSize(12).text(`• ${project.timeline.phase4.name}: ${project.timeline.phase4.duration}`, { align: 'left' });
+          }
+          doc.moveDown(1);
+        }
+
+        // Pricing
+        if (project.pricing) {
+          doc.fontSize(14).text('Wycenienie:', { align: 'left' });
+          if (project.pricing.phase1 > 0) {
+            doc.fontSize(12).text(`Faza I: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase1)}`, { align: 'left' });
+          }
+          if (project.pricing.phase2 > 0) {
+            doc.fontSize(12).text(`Faza II: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase2)}`, { align: 'left' });
+          }
+          if (project.pricing.phase3 > 0) {
+            doc.fontSize(12).text(`Faza III: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase3)}`, { align: 'left' });
+          }
+          if (project.pricing.phase4 > 0) {
+            doc.fontSize(12).text(`Faza IV: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase4)}`, { align: 'left' });
+          }
+          if (project.pricing.total) {
+            doc.fontSize(14).text(`RAZEM: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.total)}`, { align: 'left' });
+          }
+          doc.moveDown(1);
+        }
+
+        // Payment terms
+        if (project.customPaymentTerms) {
+          doc.fontSize(14).text('Warunki płatności:', { align: 'left' });
+          doc.fontSize(12).text(project.customPaymentTerms, { align: 'left' });
+          doc.moveDown(1);
+        }
+
+        // Contact info
+        doc.fontSize(12).text('Kontakt:', { align: 'left' });
+        doc.text('Jakub Czajka - Soft Synergy', { align: 'left' });
+        doc.text('Email: jakub.czajka@soft-synergy.com', { align: 'left' });
+        doc.text('Telefon: +48 793 868 886', { align: 'left' });
+
+        doc.end();
+        stream.on('finish', resolve);
+        stream.on('error', reject);
+      } catch (e) {
+        reject(e);
+      }
+    });
+
+    // Update project with PDF URL
+    project.pdfUrl = `/generated-offers/${pdfFileName}`;
+    await project.save();
+
+    // Log activity
+    try {
+      await Activity.create({
+        action: 'offer.pdf.generated',
+        entityType: 'project',
+        entityId: project._id,
+        author: req.user._id,
+        message: `PDF offer generated for project "${project.name}"`,
+        metadata: { pdfUrl: project.pdfUrl }
+      });
+    } catch (e) {
+      // ignore logging errors
+    }
+
+    res.json({
+      message: 'PDF oferty został wygenerowany pomyślnie',
+      pdfUrl: project.pdfUrl,
+      fileName: pdfFileName
+    });
+
+  } catch (error) {
+    console.error('Generate PDF error:', error);
+    res.status(500).json({ message: 'Błąd serwera podczas generowania PDF' });
   }
 });
 
