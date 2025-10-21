@@ -540,39 +540,58 @@ router.post('/generate-pdf/:projectId', auth, async (req, res) => {
         const stream = require('fs').createWriteStream(pdfPath);
         doc.pipe(stream);
 
+        // Helper function to clean text and handle line breaks
+        const cleanText = (text) => {
+          if (!text) return '';
+          return text.toString()
+            .replace(/[\u201C\u201D]/g, '"') // Replace smart quotes
+            .replace(/[\u2018\u2019]/g, "'") // Replace smart apostrophes
+            .replace(/[\u2013\u2014]/g, "-") // Replace em/en dashes
+            .replace(/[\u2026]/g, "...") // Replace ellipsis
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+        };
+
+        // Helper function to add text with proper line breaks
+        const addText = (text, fontSize = 12, options = {}) => {
+          const cleanedText = cleanText(text);
+          const lines = doc.splitTextToSize(cleanedText, doc.page.width - doc.page.margins.left - doc.page.margins.right - 20);
+          doc.fontSize(fontSize).text(lines, options);
+        };
+
         // Title
-        doc.fontSize(20).text(`Oferta: ${project.name}`, { align: 'center' });
+        addText(`Oferta: ${project.name}`, 20, { align: 'center' });
         doc.moveDown(1);
         
         // Client info
-        doc.fontSize(14).text(`Klient: ${project.clientName}`, { align: 'left' });
+        addText(`Klient: ${project.clientName}`, 14);
         if (project.clientEmail) {
-          doc.text(`Email: ${project.clientEmail}`, { align: 'left' });
+          addText(`Email: ${project.clientEmail}`, 12);
         }
         if (project.clientPhone) {
-          doc.text(`Telefon: ${project.clientPhone}`, { align: 'left' });
+          addText(`Telefon: ${project.clientPhone}`, 12);
         }
         doc.moveDown(1);
 
         // Offer number and date
-        doc.fontSize(12).text(`Numer oferty: ${templateData.offerNumber}`, { align: 'left' });
-        doc.text(`Data: ${templateData.offerDate}`, { align: 'left' });
+        addText(`Numer oferty: ${templateData.offerNumber}`, 12);
+        addText(`Data: ${templateData.offerDate}`, 12);
         doc.moveDown(1);
 
         // Description
         if (project.description) {
-          doc.fontSize(14).text('Opis projektu:', { align: 'left' });
-          doc.fontSize(12).text(project.description, { align: 'left' });
+          addText('Opis projektu:', 14);
+          addText(project.description, 12);
           doc.moveDown(1);
         }
 
         // Modules
         if (project.modules && project.modules.length > 0) {
-          doc.fontSize(14).text('Zakres prac:', { align: 'left' });
+          addText('Zakres prac:', 14);
           project.modules.forEach((module, index) => {
-            doc.fontSize(12).text(`${index + 1}. ${module.name}`, { align: 'left' });
+            addText(`${index + 1}. ${module.name}`, 12);
             if (module.description) {
-              doc.fontSize(10).text(`   ${module.description}`, { align: 'left' });
+              addText(`   ${module.description}`, 10);
             }
           });
           doc.moveDown(1);
@@ -580,55 +599,61 @@ router.post('/generate-pdf/:projectId', auth, async (req, res) => {
 
         // Timeline
         if (project.timeline) {
-          doc.fontSize(14).text('Harmonogram:', { align: 'left' });
+          addText('Harmonogram:', 14);
           if (project.timeline.phase1) {
-            doc.fontSize(12).text(`• ${project.timeline.phase1.name}: ${project.timeline.phase1.duration}`, { align: 'left' });
+            addText(`• ${project.timeline.phase1.name}: ${project.timeline.phase1.duration}`, 12);
           }
           if (project.timeline.phase2) {
-            doc.fontSize(12).text(`• ${project.timeline.phase2.name}: ${project.timeline.phase2.duration}`, { align: 'left' });
+            addText(`• ${project.timeline.phase2.name}: ${project.timeline.phase2.duration}`, 12);
           }
           if (project.timeline.phase3) {
-            doc.fontSize(12).text(`• ${project.timeline.phase3.name}: ${project.timeline.phase3.duration}`, { align: 'left' });
+            addText(`• ${project.timeline.phase3.name}: ${project.timeline.phase3.duration}`, 12);
           }
           if (project.timeline.phase4) {
-            doc.fontSize(12).text(`• ${project.timeline.phase4.name}: ${project.timeline.phase4.duration}`, { align: 'left' });
+            addText(`• ${project.timeline.phase4.name}: ${project.timeline.phase4.duration}`, 12);
           }
           doc.moveDown(1);
         }
 
         // Pricing
         if (project.pricing) {
-          doc.fontSize(14).text('Wycenienie:', { align: 'left' });
+          addText('Wycenienie:', 14);
           if (project.pricing.phase1 > 0) {
-            doc.fontSize(12).text(`Faza I: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase1)}`, { align: 'left' });
+            addText(`Faza I: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase1)}`, 12);
           }
           if (project.pricing.phase2 > 0) {
-            doc.fontSize(12).text(`Faza II: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase2)}`, { align: 'left' });
+            addText(`Faza II: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase2)}`, 12);
           }
           if (project.pricing.phase3 > 0) {
-            doc.fontSize(12).text(`Faza III: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase3)}`, { align: 'left' });
+            addText(`Faza III: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase3)}`, 12);
           }
           if (project.pricing.phase4 > 0) {
-            doc.fontSize(12).text(`Faza IV: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase4)}`, { align: 'left' });
+            addText(`Faza IV: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase4)}`, 12);
           }
           if (project.pricing.total) {
-            doc.fontSize(14).text(`RAZEM: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.total)}`, { align: 'left' });
+            addText(`RAZEM: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.total)}`, 14);
           }
           doc.moveDown(1);
         }
 
         // Payment terms
         if (project.customPaymentTerms) {
-          doc.fontSize(14).text('Warunki płatności:', { align: 'left' });
-          doc.fontSize(12).text(project.customPaymentTerms, { align: 'left' });
+          addText('Warunki płatności:', 14);
+          // Split payment terms by newlines and add each line separately
+          const paymentLines = project.customPaymentTerms.split('\n');
+          paymentLines.forEach(line => {
+            if (line.trim()) {
+              addText(line.trim(), 12);
+            }
+          });
           doc.moveDown(1);
         }
 
         // Contact info
-        doc.fontSize(12).text('Kontakt:', { align: 'left' });
-        doc.text('Jakub Czajka - Soft Synergy', { align: 'left' });
-        doc.text('Email: jakub.czajka@soft-synergy.com', { align: 'left' });
-        doc.text('Telefon: +48 793 868 886', { align: 'left' });
+        addText('Kontakt:', 12);
+        addText('Jakub Czajka - Soft Synergy', 12);
+        addText('Email: jakub.czajka@soft-synergy.com', 12);
+        addText('Telefon: +48 793 868 886', 12);
 
         doc.end();
         stream.on('finish', resolve);
