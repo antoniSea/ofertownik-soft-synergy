@@ -13,7 +13,8 @@ import {
   User,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  FileCheck
 } from 'lucide-react';
 import { projectsAPI, offersAPI, authAPI } from '../services/api';
 import { useI18n } from '../contexts/I18nContext';
@@ -51,7 +52,7 @@ const ProjectDetail = () => {
     }
   });
 
-  const generatePdfMutation = useMutation(offersAPI.generatePdf, {
+  const generatePdfMutation = useMutation((projectData) => offersAPI.generatePdf(id, projectData), {
     onSuccess: (response) => {
       toast.success('PDF oferty został wygenerowany pomyślnie!');
       
@@ -68,6 +69,14 @@ const ProjectDetail = () => {
       queryClient.invalidateQueries(['project', id]);
     },
     onError: () => toast.error('Błąd podczas generowania PDF')
+  });
+
+  const generateWorkSummaryMutation = useMutation((data) => offersAPI.generateWorkSummary(id, data), {
+    onSuccess: (response) => {
+      toast.success('Zestawienie pracy zostało wygenerowane pomyślnie!');
+      queryClient.invalidateQueries(['project', id]);
+    },
+    onError: () => toast.error('Błąd podczas generowania zestawienia pracy')
   });
 
   const getStatusConfig = (status) => {
@@ -166,6 +175,14 @@ const ProjectDetail = () => {
             className="btn-primary flex items-center"
           >
             <FileText className="h-4 w-4 mr-2" />{t('buttons.generateOffer')}
+          </button>
+          
+          <button
+            onClick={() => generateWorkSummaryMutation.mutate({})}
+            disabled={generateWorkSummaryMutation.isLoading}
+            className="btn-secondary flex items-center"
+          >
+            <FileCheck className="h-4 w-4 mr-2" />Zestawienie pracy
           </button>
         </div>
       </div>
@@ -385,7 +402,7 @@ const ProjectDetail = () => {
                     </a>
                   ) : (
                     <button
-                      onClick={() => generatePdfMutation.mutate(id)}
+                      onClick={() => generatePdfMutation.mutate(project)}
                       disabled={generatePdfMutation.isLoading}
                       className="btn-secondary w-full flex items-center justify-center"
                     >
@@ -393,6 +410,19 @@ const ProjectDetail = () => {
                       {generatePdfMutation.isLoading ? 'Generuję PDF...' : 'Generuj i pobierz PDF'}
                     </button>
                   )}
+                </div>
+              )}
+              {project.workSummaryUrl && (
+                <div className="pt-3">
+                  <a
+                    href={`https:///oferty.soft-synergy.com${project.workSummaryUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary w-full flex items-center justify-center"
+                  >
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    Zobacz zestawienie pracy
+                  </a>
                 </div>
               )}
             </div>

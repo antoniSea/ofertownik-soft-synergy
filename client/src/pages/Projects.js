@@ -66,9 +66,9 @@ const Projects = () => {
     }
   };
 
-  const generatePdf = async (projectId) => {
+  const generatePdf = async (project) => {
     try {
-      const response = await offersAPI.generatePdf(projectId);
+      const response = await offersAPI.generatePdf(project._id, project);
       toast.success('PDF oferty został wygenerowany pomyślnie!');
       
       // Automatycznie pobierz PDF
@@ -308,7 +308,7 @@ const Projects = () => {
                   </a>
                 ) : project.generatedOfferUrl ? (
                   <button
-                    onClick={() => generatePdf(project._id)}
+                    onClick={() => generatePdf(project)}
                     className="p-2 text-gray-400 hover:text-red-600 group relative"
                     title="Generuj i pobierz PDF"
                   >

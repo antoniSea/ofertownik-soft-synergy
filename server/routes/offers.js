@@ -420,8 +420,16 @@ router.get('/professional-url/:projectId', auth, async (req, res) => {
 // Generate PDF only endpoint
 router.post('/generate-pdf/:projectId', auth, async (req, res) => {
   try {
-    const project = await Project.findById(req.params.projectId)
-      .populate('createdBy', 'firstName lastName email');
+    // Try to get project from database first, if fails use data from request body
+    let project;
+    try {
+      project = await Project.findById(req.params.projectId)
+        .populate('createdBy', 'firstName lastName email');
+    } catch (dbError) {
+      console.log('Database not available, using request body data');
+      // Use data from request body if database is not available
+      project = req.body;
+    }
     
     if (!project) {
       return res.status(404).json({ message: 'Projekt nie został znaleziony' });
@@ -690,6 +698,340 @@ router.post('/generate-pdf/:projectId', auth, async (req, res) => {
   } catch (error) {
     console.error('Generate PDF error:', error);
     res.status(500).json({ message: 'Błąd serwera podczas generowania PDF' });
+  }
+});
+
+// Simple PDF generation endpoint without database dependency
+router.post('/generate-pdf-simple', auth, async (req, res) => {
+  try {
+    const projectData = req.body;
+    
+    if (!projectData.name || !projectData.clientName) {
+      return res.status(400).json({ message: 'Brakuje wymaganych danych: name, clientName' });
+    }
+
+    // Create generated-offers directory if it doesn't exist
+    const outputDir = path.join(__dirname, '../generated-offers');
+    await fs.mkdir(outputDir, { recursive: true });
+
+    // Generate PDF using pdfkit
+    const PDFDocument = require('pdfkit');
+    const pdfFileName = `offer-${Date.now()}.pdf`;
+    const pdfPath = path.join(outputDir, pdfFileName);
+
+    await new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ 
+          size: 'A4', 
+          margins: { top: 50, left: 50, right: 50, bottom: 50 } 
+        });
+        const stream = require('fs').createWriteStream(pdfPath);
+        doc.pipe(stream);
+
+        // Helper function to clean text and handle line breaks
+        const cleanText = (text) => {
+          if (!text) return '';
+          return text.toString()
+            .replace(/[\u201C\u201D]/g, '"') // Replace smart quotes
+            .replace(/[\u2018\u2019]/g, "'") // Replace smart apostrophes
+            .replace(/[\u2013\u2014]/g, "-") // Replace em/en dashes
+            .replace(/[\u2026]/g, "...") // Replace ellipsis
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+        };
+
+        // Helper function to add text with proper line breaks
+        const addText = (text, fontSize = 12, options = {}) => {
+          const cleanedText = cleanText(text);
+          const lines = doc.splitTextToSize(cleanedText, doc.page.width - doc.page.margins.left - doc.page.margins.right - 20);
+          doc.fontSize(fontSize).text(lines, options);
+        };
+
+        // Title
+        addText(`Oferta: ${projectData.name}`, 20, { align: 'center' });
+        doc.moveDown(1);
+        
+        // Client info
+        addText(`Klient: ${projectData.clientName}`, 14);
+        if (projectData.clientEmail) {
+          addText(`Email: ${projectData.clientEmail}`, 12);
+        }
+        if (projectData.clientPhone) {
+          addText(`Telefon: ${projectData.clientPhone}`, 12);
+        }
+        doc.moveDown(1);
+
+        // Offer number and date
+        addText(`Numer oferty: ${projectData.offerNumber || `SS/${new Date().getFullYear()}/${(new Date().getMonth()+1).toString().padStart(2, '0')}/01`}`, 12);
+        addText(`Data: ${new Date().toLocaleDateString('pl-PL')}`, 12);
+        doc.moveDown(1);
+
+        // Description
+        if (projectData.description) {
+          addText('Opis projektu:', 14);
+          addText(projectData.description, 12);
+          doc.moveDown(1);
+        }
+
+        // Modules
+        if (projectData.modules && projectData.modules.length > 0) {
+          addText('Zakres prac:', 14);
+          projectData.modules.forEach((module, index) => {
+            addText(`${index + 1}. ${module.name}`, 12);
+            if (module.description) {
+              addText(`   ${module.description}`, 10);
+            }
+          });
+          doc.moveDown(1);
+        }
+
+        // Timeline
+        if (projectData.timeline) {
+          addText('Harmonogram:', 14);
+          if (projectData.timeline.phase1) {
+            addText(`• ${projectData.timeline.phase1.name}: ${projectData.timeline.phase1.duration}`, 12);
+          }
+          if (projectData.timeline.phase2) {
+            addText(`• ${projectData.timeline.phase2.name}: ${projectData.timeline.phase2.duration}`, 12);
+          }
+          if (projectData.timeline.phase3) {
+            addText(`• ${projectData.timeline.phase3.name}: ${projectData.timeline.phase3.duration}`, 12);
+          }
+          if (projectData.timeline.phase4) {
+            addText(`• ${projectData.timeline.phase4.name}: ${projectData.timeline.phase4.duration}`, 12);
+          }
+          doc.moveDown(1);
+        }
+
+        // Pricing
+        if (projectData.pricing) {
+          addText('Wycenienie:', 14);
+          if (projectData.pricing.phase1 > 0) {
+            addText(`Faza I: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(projectData.pricing.phase1)}`, 12);
+          }
+          if (projectData.pricing.phase2 > 0) {
+            addText(`Faza II: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(projectData.pricing.phase2)}`, 12);
+          }
+          if (projectData.pricing.phase3 > 0) {
+            addText(`Faza III: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(projectData.pricing.phase3)}`, 12);
+          }
+          if (projectData.pricing.phase4 > 0) {
+            addText(`Faza IV: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(projectData.pricing.phase4)}`, 12);
+          }
+          if (projectData.pricing.total) {
+            addText(`RAZEM: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(projectData.pricing.total)}`, 14);
+          }
+          doc.moveDown(1);
+        }
+
+        // Payment terms
+        if (projectData.customPaymentTerms) {
+          addText('Warunki płatności:', 14);
+          const paymentLines = projectData.customPaymentTerms.split('\n');
+          paymentLines.forEach(line => {
+            if (line.trim()) {
+              addText(line.trim(), 12);
+            }
+          });
+          doc.moveDown(1);
+        }
+
+        // Contact info
+        addText('Kontakt:', 12);
+        addText('Jakub Czajka - Soft Synergy', 12);
+        addText('Email: jakub.czajka@soft-synergy.com', 12);
+        addText('Telefon: +48 793 868 886', 12);
+
+        doc.end();
+        stream.on('finish', resolve);
+        stream.on('error', reject);
+      } catch (e) {
+        reject(e);
+      }
+    });
+
+    res.json({
+      message: 'PDF oferty został wygenerowany pomyślnie',
+      pdfUrl: `/generated-offers/${pdfFileName}`,
+      fileName: pdfFileName
+    });
+
+  } catch (error) {
+    console.error('Generate PDF error:', error);
+    res.status(500).json({ message: 'Błąd serwera podczas generowania PDF' });
+  }
+});
+
+// i18n for work summary
+const workSummaryI18n = {
+  pl: {
+    companyTagline: 'Innowacyjne rozwiązania programistyczne',
+    summaryTitle: 'Zestawienie Prac',
+    date: 'Data',
+    number: 'Numer',
+    projectLabel: 'Projekt:',
+    clientLabel: 'Klient:',
+    intro: 'Podsumowanie',
+    introText: 'Dziękujemy za współpracę przy realizacji projektu. Poniżej prezentujemy zestawienie wykonanych prac oraz osiągniętych rezultatów.',
+    projectDetails: 'Szczegóły Projektu',
+    projectName: 'Nazwa projektu',
+    clientName: 'Klient',
+    period: 'Okres realizacji',
+    status: 'Status',
+    completedWork: 'Wykonane Prace',
+    completedDate: 'Data ukończenia',
+    keyFeatures: 'Kluczowe Funkcjonalności',
+    statistics: 'Statystyki Projektu',
+    clientFeedback: 'Opinie Klienta',
+    achievements: 'Osiągnięcia',
+    thankYou: 'Dziękujemy za współpracę!',
+    thankYouText: 'Dziękujemy za zaufanie i możliwość realizacji tego projektu. Mamy nadzieję, że efekt naszej pracy spełnił Państwa oczekiwania.',
+    feedbackSubject: 'Opinia o projekcie',
+    shareFeedback: 'Udostępnij opinię',
+    downloadSummary: 'Pobierz zestawienie'
+  },
+  en: {
+    companyTagline: 'Innovative Software Solutions',
+    summaryTitle: 'Work Summary',
+    date: 'Date',
+    number: 'Number',
+    projectLabel: 'Project:',
+    clientLabel: 'Client:',
+    intro: 'Summary',
+    introText: 'Thank you for working with us on this project. Below is a summary of the work completed and results achieved.',
+    projectDetails: 'Project Details',
+    projectName: 'Project name',
+    clientName: 'Client',
+    period: 'Period',
+    status: 'Status',
+    completedWork: 'Completed Work',
+    completedDate: 'Completion date',
+    keyFeatures: 'Key Features',
+    statistics: 'Project Statistics',
+    clientFeedback: 'Client Feedback',
+    achievements: 'Achievements',
+    thankYou: 'Thank you for your cooperation!',
+    thankYouText: 'Thank you for your trust and the opportunity to work on this project. We hope the results met your expectations.',
+    feedbackSubject: 'Project feedback',
+    shareFeedback: 'Share feedback',
+    downloadSummary: 'Download summary'
+  }
+};
+
+// Generate work summary
+router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId)
+      .populate('createdBy', 'firstName lastName email');
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Projekt nie został znaleziony' });
+    }
+
+    const templatePath = path.join(__dirname, '../templates/work-summary-template.html');
+    const templateContent = await fs.readFile(templatePath, 'utf8');
+    const template = handlebars.compile(templateContent);
+    
+    const requestedLang = (req.query?.lang || '').toLowerCase();
+    const lang = (requestedLang === 'en' || requestedLang === 'pl') ? requestedLang : ((project.language === 'en') ? 'en' : 'pl');
+    const t = workSummaryI18n[lang] || workSummaryI18n.pl;
+
+    // Parse work summary data from request body or use defaults
+    const workSummaryData = {
+      lang,
+      t,
+      projectName: project.name,
+      clientName: project.clientName,
+      summaryDate: new Date().toLocaleDateString('pl-PL'),
+      summaryNumber: project.offerNumber || `WP/${new Date().getFullYear()}/${(new Date().getMonth()+1).toString().padStart(2, '0')}/${project._id.toString().slice(-4)}`,
+      summaryDescription: req.body.summaryDescription || 'Dzięki wspólnej pracy udało nam się zrealizować wszystkie założone cele projektu.',
+      periodStart: req.body.periodStart || new Date(project.createdAt).toLocaleDateString('pl-PL'),
+      periodEnd: req.body.periodEnd || new Date().toLocaleDateString('pl-PL'),
+      status: req.body.status || project.status,
+      completedTasks: req.body.completedTasks || [
+        {
+          name: 'Analiza wymagań',
+          description: 'Przeprowadzenie szczegółowej analizy potrzeb klienta',
+          date: new Date().toLocaleDateString('pl-PL')
+        },
+        {
+          name: 'Implementacja',
+          description: 'Realizacja głównych funkcjonalności systemu',
+          date: new Date().toLocaleDateString('pl-PL')
+        }
+      ],
+      keyFeatures: req.body.keyFeatures || project.modules.map(m => ({
+        name: m.name,
+        description: m.description,
+        color: m.color || 'blue'
+      })),
+      statistics: req.body.statistics || [
+        { label: 'Dni współpracy', value: '14+' },
+        { label: 'Wykonane moduły', value: '4' },
+        { label: 'Satisfaction rate', value: '100%' }
+      ],
+      testimonial: req.body.testimonial || {
+        text: 'Współpraca z Soft Synergy przebiegła sprawnie i profesjonalnie. Efekty przerosły nasze oczekiwania.',
+        author: project.clientName,
+        position: 'CEO'
+      },
+      achievements: req.body.achievements || [
+        {
+          name: 'Terminowa realizacja',
+          description: 'Projekt zakończony zgodnie z harmonogramem'
+        },
+        {
+          name: 'Wysoka jakość',
+          description: 'Wszystkie funkcjonalności spełniają najwyższe standardy'
+        }
+      ],
+      clientInitial: project.clientName.charAt(0).toUpperCase(),
+      companyEmail: 'jakub.czajka@soft-synergy.com',
+      companyPhone: '+48 793 868 886'
+    };
+
+    const html = template(workSummaryData);
+
+    const outputDir = path.join(__dirname, '../generated-offers');
+    await fs.mkdir(outputDir, { recursive: true });
+
+    const fileName = `work-summary-${project._id}-${Date.now()}.html`;
+    const filePath = path.join(outputDir, fileName);
+    await fs.writeFile(filePath, html);
+
+    // Update project with generated work summary URL
+    project.workSummaryUrl = `/generated-offers/${fileName}`;
+    await project.save();
+
+    // Log activity
+    try {
+      await Activity.create({
+        action: 'work-summary.generated',
+        entityType: 'project',
+        entityId: project._id,
+        author: req.user._id,
+        message: `Work summary generated for project "${project.name}"`,
+        metadata: { workSummaryUrl: `/generated-offers/${fileName}` }
+      });
+    } catch (e) {
+      // ignore logging errors
+    }
+
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+
+    res.json({
+      message: 'Zestawienie pracy zostało wygenerowane pomyślnie',
+      workSummaryUrl: `/generated-offers/${fileName}`,
+      project: project
+    });
+
+  } catch (error) {
+    console.error('Generate work summary error:', error);
+    res.status(500).json({ message: 'Błąd serwera podczas generowania zestawienia pracy' });
   }
 });
 
