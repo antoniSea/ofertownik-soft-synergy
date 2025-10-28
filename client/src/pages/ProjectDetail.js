@@ -14,7 +14,10 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  FileCheck
+  FileCheck,
+  X,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { projectsAPI, offersAPI, authAPI } from '../services/api';
 import { useI18n } from '../contexts/I18nContext';
@@ -25,6 +28,26 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useI18n();
+
+  const [showWorkSummaryModal, setShowWorkSummaryModal] = React.useState(false);
+  const [workSummaryData, setWorkSummaryData] = React.useState({
+    summaryDescription: '',
+    periodStart: '',
+    periodEnd: '',
+    status: '',
+    completedTasks: [
+      { name: '', description: '', date: '' }
+    ],
+    keyFeatures: [],
+    statistics: [
+      { label: 'Dni współpracy', value: '' },
+      { label: 'Wykonane moduły', value: '' },
+      { label: 'Status projektu', value: '' }
+    ],
+    achievements: [
+      { name: '', description: '' }
+    ]
+  });
 
   const { data: project, isLoading } = useQuery(
     ['project', id],
@@ -74,6 +97,7 @@ const ProjectDetail = () => {
   const generateWorkSummaryMutation = useMutation((data) => offersAPI.generateWorkSummary(id, data), {
     onSuccess: (response) => {
       toast.success('Zestawienie pracy zostało wygenerowane pomyślnie!');
+      setShowWorkSummaryModal(false);
       queryClient.invalidateQueries(['project', id]);
     },
     onError: () => toast.error('Błąd podczas generowania zestawienia pracy')
@@ -110,6 +134,81 @@ const ProjectDetail = () => {
       style: 'currency',
       currency: 'PLN',
     }).format(amount);
+  };
+
+  const handleWorkSummaryChange = (field, value) => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleTaskChange = (index, field, value) => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      completedTasks: prev.completedTasks.map((task, i) => 
+        i === index ? { ...task, [field]: value } : task
+      )
+    }));
+  };
+
+  const addTask = () => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      completedTasks: [...prev.completedTasks, { name: '', description: '', date: '' }]
+    }));
+  };
+
+  const removeTask = (index) => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      completedTasks: prev.completedTasks.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleStatisticChange = (index, field, value) => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      statistics: prev.statistics.map((stat, i) => 
+        i === index ? { ...stat, [field]: value } : stat
+      )
+    }));
+  };
+
+  const handleAchievementChange = (index, field, value) => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      achievements: prev.achievements.map((achievement, i) => 
+        i === index ? { ...achievement, [field]: value } : achievement
+      )
+    }));
+  };
+
+  const addAchievement = () => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      achievements: [...prev.achievements, { name: '', description: '' }]
+    }));
+  };
+
+  const removeAchievement = (index) => {
+    setWorkSummaryData(prev => ({
+      ...prev,
+      achievements: prev.achievements.filter((_, i) => i !== index)
+    }));
+  };
+
+  const openWorkSummaryModal = () => {
+    // Pre-fill with project data
+    setWorkSummaryData(prev => ({
+      ...prev,
+      summaryDescription: project.description || '',
+      periodStart: new Date(project.createdAt).toLocaleDateString('pl-PL'),
+      periodEnd: new Date().toLocaleDateString('pl-PL'),
+      status: project.status,
+      keyFeatures: project.modules || []
+    }));
+    setShowWorkSummaryModal(true);
   };
 
   if (isLoading) {
@@ -178,8 +277,7 @@ const ProjectDetail = () => {
           </button>
           
           <button
-            onClick={() => generateWorkSummaryMutation.mutate({})}
-            disabled={generateWorkSummaryMutation.isLoading}
+            onClick={openWorkSummaryModal}
             className="btn-secondary flex items-center"
           >
             <FileCheck className="h-4 w-4 mr-2" />Zestawienie pracy
@@ -413,7 +511,7 @@ const ProjectDetail = () => {
                 </div>
               )}
               {project.workSummaryUrl && (
-                <div className="pt-3">
+                <div className="pt-3 space-y-2">
                   <a
                     href={`https:///oferty.soft-synergy.com${project.workSummaryUrl}`}
                     target="_blank"
@@ -421,8 +519,19 @@ const ProjectDetail = () => {
                     className="btn-primary w-full flex items-center justify-center"
                   >
                     <FileCheck className="h-4 w-4 mr-2" />
-                    Zobacz zestawienie pracy
+                    Zobacz zestawienie pracy HTML
                   </a>
+                  {project.workSummaryPdfUrl ? (
+                    <a
+                      href={`https:///oferty.soft-synergy.com${project.workSummaryPdfUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary w-full flex items-center justify-center"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Pobierz zestawienie PDF
+                    </a>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -451,6 +560,244 @@ const ProjectDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Work Summary Modal */}
+      {showWorkSummaryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Generuj zestawienie pracy</h2>
+                <button
+                  onClick={() => setShowWorkSummaryModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Opis zestawienia
+                    </label>
+                    <textarea
+                      value={workSummaryData.summaryDescription}
+                      onChange={(e) => handleWorkSummaryChange('summaryDescription', e.target.value)}
+                      className="input-field h-20"
+                      placeholder="Opis wykonanych prac..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status projektu
+                    </label>
+                    <select
+                      value={workSummaryData.status}
+                      onChange={(e) => handleWorkSummaryChange('status', e.target.value)}
+                      className="input-field"
+                    >
+                      <option value="draft">Szkic</option>
+                      <option value="active">Aktywny</option>
+                      <option value="completed">Zakończony</option>
+                      <option value="cancelled">Anulowany</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Data rozpoczęcia
+                    </label>
+                    <input
+                      type="date"
+                      value={workSummaryData.periodStart}
+                      onChange={(e) => handleWorkSummaryChange('periodStart', e.target.value)}
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Data zakończenia
+                    </label>
+                    <input
+                      type="date"
+                      value={workSummaryData.periodEnd}
+                      onChange={(e) => handleWorkSummaryChange('periodEnd', e.target.value)}
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+
+                {/* Completed Tasks */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Wykonane zadania</h3>
+                    <button
+                      onClick={addTask}
+                      className="btn-secondary flex items-center"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Dodaj zadanie
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {workSummaryData.completedTasks.map((task, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-medium text-gray-900">Zadanie {index + 1}</h4>
+                          {workSummaryData.completedTasks.length > 1 && (
+                            <button
+                              onClick={() => removeTask(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Nazwa zadania
+                            </label>
+                            <input
+                              type="text"
+                              value={task.name}
+                              onChange={(e) => handleTaskChange(index, 'name', e.target.value)}
+                              className="input-field"
+                              placeholder="Nazwa zadania"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Data wykonania
+                            </label>
+                            <input
+                              type="date"
+                              value={task.date}
+                              onChange={(e) => handleTaskChange(index, 'date', e.target.value)}
+                              className="input-field"
+                            />
+                          </div>
+                          <div className="md:col-span-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Opis
+                            </label>
+                            <textarea
+                              value={task.description}
+                              onChange={(e) => handleTaskChange(index, 'description', e.target.value)}
+                              className="input-field h-20"
+                              placeholder="Opis wykonanych prac..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Statistics */}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Statystyki projektu</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {workSummaryData.statistics.map((stat, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {stat.label}
+                        </label>
+                        <input
+                          type="text"
+                          value={stat.value}
+                          onChange={(e) => handleStatisticChange(index, 'value', e.target.value)}
+                          className="input-field"
+                          placeholder="Wartość"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Achievements */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Osiągnięcia</h3>
+                    <button
+                      onClick={addAchievement}
+                      className="btn-secondary flex items-center"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Dodaj osiągnięcie
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {workSummaryData.achievements.map((achievement, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-medium text-gray-900">Osiągnięcie {index + 1}</h4>
+                          {workSummaryData.achievements.length > 1 && (
+                            <button
+                              onClick={() => removeAchievement(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Nazwa osiągnięcia
+                            </label>
+                            <input
+                              type="text"
+                              value={achievement.name}
+                              onChange={(e) => handleAchievementChange(index, 'name', e.target.value)}
+                              className="input-field"
+                              placeholder="Nazwa osiągnięcia"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Opis
+                            </label>
+                            <textarea
+                              value={achievement.description}
+                              onChange={(e) => handleAchievementChange(index, 'description', e.target.value)}
+                              className="input-field h-20"
+                              placeholder="Opis osiągnięcia..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end space-x-4 pt-6 border-t">
+                  <button
+                    onClick={() => setShowWorkSummaryModal(false)}
+                    className="btn-secondary"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    onClick={() => generateWorkSummaryMutation.mutate(workSummaryData)}
+                    disabled={generateWorkSummaryMutation.isLoading}
+                    className="btn-primary flex items-center"
+                  >
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    {generateWorkSummaryMutation.isLoading ? 'Generuję...' : 'Generuj zestawienie'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

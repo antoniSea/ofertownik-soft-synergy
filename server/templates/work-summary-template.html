@@ -176,26 +176,13 @@
             </section>
             {{/if}}
             
-            <!-- TESTIMONIAL -->
-            {{#if testimonial}}
+            <!-- TECHNICAL NOTES -->
+            {{#if technicalNotes}}
             <section class="reveal">
-                <h2 class="text-3xl font-bold mb-8 text-center">{{t.clientFeedback}}</h2>
-                <div class="glass-card p-8 border-l-4 border-blue-500">
-                    <div class="flex items-start gap-6">
-                        <div class="flex-shrink-0">
-                            <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
-                                {{clientInitial}}
-                            </div>
-                        </div>
-                        <div>
-                            <blockquote class="text-lg text-slate-300 print-text-gray mb-4">
-                                "{{testimonial.text}}"
-                            </blockquote>
-                            <div>
-                                <p class="font-semibold text-white print-text-black">{{testimonial.author}}</p>
-                                <p class="text-sm text-slate-400 print-text-gray">{{testimonial.position}}</p>
-                            </div>
-                        </div>
+                <h2 class="text-3xl font-bold mb-8 text-center">{{t.technicalNotes}}</h2>
+                <div class="glass-card p-8">
+                    <div class="prose prose-invert max-w-none text-slate-300 print-text-gray">
+                        <p>{{technicalNotes}}</p>
                     </div>
                 </div>
             </section>
@@ -225,15 +212,15 @@
             
             <div class="page-break"></div>
             
-            <!-- THANK YOU -->
+            <!-- NEXT STEPS -->
             <section class="reveal text-center">
-                <h2 class="text-3xl font-bold mb-4">{{t.thankYou}}</h2>
+                <h2 class="text-3xl font-bold mb-4">{{t.nextSteps}}</h2>
                 <p class="max-w-2xl mx-auto text-slate-300 mb-8 print-text-gray text-lg">
-                    {{t.thankYouText}}
+                    Dokument zawiera kompletne zestawienie wykonanych prac. W przypadku pytań lub potrzeb dodatkowych informacji, prosimy o kontakt.
                 </p>
                 <div class="flex justify-center gap-6 no-print">
-                    <a href="mailto:{{companyEmail}}?subject={{t.feedbackSubject}} - {{summaryNumber}}" class="bg-blue-600 text-white font-bold text-lg py-3 px-8 rounded-lg transition-all duration-300 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">
-                        {{t.shareFeedback}}
+                    <a href="mailto:{{companyEmail}}?subject=Zapytanie dotyczące projektu - {{summaryNumber}}" class="bg-blue-600 text-white font-bold text-lg py-3 px-8 rounded-lg transition-all duration-300 hover:bg-blue-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">
+                        Kontakt
                     </a>
                     <button onclick="downloadHTML(event)" class="bg-white/10 text-white font-semibold py-3 px-8 rounded-lg transition-colors hover:bg-white/20">
                         {{t.downloadSummary}}

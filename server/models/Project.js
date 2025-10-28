@@ -167,6 +167,10 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  workSummaryPdfUrl: {
+    type: String,
+    default: null
+  },
   notes: [{
     text: { type: String, required: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

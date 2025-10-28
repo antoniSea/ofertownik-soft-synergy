@@ -872,7 +872,7 @@ const workSummaryI18n = {
     projectLabel: 'Projekt:',
     clientLabel: 'Klient:',
     intro: 'Podsumowanie',
-    introText: 'Dziękujemy za współpracę przy realizacji projektu. Poniżej prezentujemy zestawienie wykonanych prac oraz osiągniętych rezultatów.',
+    introText: 'Niniejsze zestawienie zawiera szczegółowy przegląd wykonanych prac w ramach projektu. Dokument przedstawia zakres realizowanych zadań, osiągnięte rezultaty oraz status projektu.',
     projectDetails: 'Szczegóły Projektu',
     projectName: 'Nazwa projektu',
     clientName: 'Klient',
@@ -882,12 +882,9 @@ const workSummaryI18n = {
     completedDate: 'Data ukończenia',
     keyFeatures: 'Kluczowe Funkcjonalności',
     statistics: 'Statystyki Projektu',
-    clientFeedback: 'Opinie Klienta',
     achievements: 'Osiągnięcia',
-    thankYou: 'Dziękujemy za współpracę!',
-    thankYouText: 'Dziękujemy za zaufanie i możliwość realizacji tego projektu. Mamy nadzieję, że efekt naszej pracy spełnił Państwa oczekiwania.',
-    feedbackSubject: 'Opinia o projekcie',
-    shareFeedback: 'Udostępnij opinię',
+    technicalNotes: 'Uwagi techniczne',
+    nextSteps: 'Następne kroki',
     downloadSummary: 'Pobierz zestawienie'
   },
   en: {
@@ -898,7 +895,7 @@ const workSummaryI18n = {
     projectLabel: 'Project:',
     clientLabel: 'Client:',
     intro: 'Summary',
-    introText: 'Thank you for working with us on this project. Below is a summary of the work completed and results achieved.',
+    introText: 'This document provides a detailed overview of work completed within the project scope. It presents the range of tasks performed, achieved results, and project status.',
     projectDetails: 'Project Details',
     projectName: 'Project name',
     clientName: 'Client',
@@ -908,12 +905,9 @@ const workSummaryI18n = {
     completedDate: 'Completion date',
     keyFeatures: 'Key Features',
     statistics: 'Project Statistics',
-    clientFeedback: 'Client Feedback',
     achievements: 'Achievements',
-    thankYou: 'Thank you for your cooperation!',
-    thankYouText: 'Thank you for your trust and the opportunity to work on this project. We hope the results met your expectations.',
-    feedbackSubject: 'Project feedback',
-    shareFeedback: 'Share feedback',
+    technicalNotes: 'Technical Notes',
+    nextSteps: 'Next Steps',
     downloadSummary: 'Download summary'
   }
 };
@@ -970,11 +964,6 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
         { label: 'Wykonane moduły', value: '4' },
         { label: 'Satisfaction rate', value: '100%' }
       ],
-      testimonial: req.body.testimonial || {
-        text: 'Współpraca z Soft Synergy przebiegła sprawnie i profesjonalnie. Efekty przerosły nasze oczekiwania.',
-        author: project.clientName,
-        position: 'CEO'
-      },
       achievements: req.body.achievements || [
         {
           name: 'Terminowa realizacja',
@@ -985,7 +974,21 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           description: 'Wszystkie funkcjonalności spełniają najwyższe standardy'
         }
       ],
-      clientInitial: project.clientName.charAt(0).toUpperCase(),
+      statistics: req.body.statistics || [
+        { label: 'Dni współpracy', value: '14+' },
+        { label: 'Wykonane moduły', value: '4' },
+        { label: 'Status projektu', value: 'W trakcie realizacji' }
+      ],
+      achievements: req.body.achievements || [
+        {
+          name: 'Terminowa realizacja',
+          description: 'Projekt realizowany zgodnie z harmonogramem'
+        },
+        {
+          name: 'Wysoka jakość',
+          description: 'Wszystkie funkcjonalności spełniają wymagania'
+        }
+      ],
       companyEmail: 'jakub.czajka@soft-synergy.com',
       companyPhone: '+48 793 868 886'
     };
@@ -995,12 +998,149 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
     const outputDir = path.join(__dirname, '../generated-offers');
     await fs.mkdir(outputDir, { recursive: true });
 
+    // Clean up old work summary files for this project
+    try {
+      const existingFiles = await fs.readdir(outputDir);
+      const projectFiles = existingFiles.filter(file => file.startsWith(`work-summary-${project._id}-`));
+      
+      for (const oldFile of projectFiles) {
+        const oldFilePath = path.join(outputDir, oldFile);
+        await fs.unlink(oldFilePath);
+        console.log(`Deleted old work summary file: ${oldFile}`);
+      }
+    } catch (cleanupError) {
+      console.error('Error cleaning up old work summary files:', cleanupError);
+    }
+
     const fileName = `work-summary-${project._id}-${Date.now()}.html`;
     const filePath = path.join(outputDir, fileName);
     await fs.writeFile(filePath, html);
 
+    // Generate PDF
+    let pdfFileName = null;
+    let pdfUrl = null;
+    
+    try {
+      const PDFDocument = require('pdfkit');
+      pdfFileName = `work-summary-${project._id}-${Date.now()}.pdf`;
+      const pdfPath = path.join(outputDir, pdfFileName);
+
+      await new Promise((resolve, reject) => {
+        try {
+          const doc = new PDFDocument({ 
+            size: 'A4', 
+            margins: { top: 50, left: 50, right: 50, bottom: 50 } 
+          });
+          const stream = require('fs').createWriteStream(pdfPath);
+          doc.pipe(stream);
+
+          const cleanText = (text) => {
+            if (!text) return '';
+            return text.toString()
+              .replace(/[\u201C\u201D]/g, '"')
+              .replace(/[\u2018\u2019]/g, "'")
+              .replace(/[\u2013\u2014]/g, "-")
+              .replace(/[\u2026]/g, "...")
+              .replace(/\s+/g, ' ')
+              .trim();
+          };
+
+          const addText = (text, fontSize = 12, options = {}) => {
+            const cleanedText = cleanText(text);
+            const lines = doc.splitTextToSize(cleanedText, doc.page.width - doc.page.margins.left - doc.page.margins.right - 20);
+            doc.fontSize(fontSize).text(lines, options);
+          };
+
+          // Title
+          addText(`Zestawienie Prac: ${project.name}`, 20, { align: 'center' });
+          doc.moveDown(1);
+          
+          // Client info
+          addText(`Klient: ${project.clientName}`, 14);
+          addText(`Numer zestawienia: ${workSummaryData.summaryNumber}`, 12);
+          addText(`Data: ${workSummaryData.summaryDate}`, 12);
+          doc.moveDown(1);
+
+          // Description
+          if (workSummaryData.summaryDescription) {
+            addText('Opis zestawienia:', 14);
+            addText(workSummaryData.summaryDescription, 12);
+            doc.moveDown(1);
+          }
+
+          // Project details
+          addText('Szczegóły projektu:', 14);
+          addText(`Okres realizacji: ${workSummaryData.periodStart} - ${workSummaryData.periodEnd}`, 12);
+          addText(`Status: ${workSummaryData.status}`, 12);
+          doc.moveDown(1);
+
+          // Completed tasks
+          if (workSummaryData.completedTasks && workSummaryData.completedTasks.length > 0) {
+            addText('Wykonane zadania:', 14);
+            workSummaryData.completedTasks.forEach((task, index) => {
+              if (task.name) {
+                addText(`${index + 1}. ${task.name}`, 12);
+                if (task.description) {
+                  addText(`   ${task.description}`, 10);
+                }
+                if (task.date) {
+                  addText(`   Data: ${task.date}`, 10);
+                }
+              }
+            });
+            doc.moveDown(1);
+          }
+
+          // Statistics
+          if (workSummaryData.statistics && workSummaryData.statistics.length > 0) {
+            addText('Statystyki projektu:', 14);
+            workSummaryData.statistics.forEach(stat => {
+              if (stat.label && stat.value) {
+                addText(`• ${stat.label}: ${stat.value}`, 12);
+              }
+            });
+            doc.moveDown(1);
+          }
+
+          // Achievements
+          if (workSummaryData.achievements && workSummaryData.achievements.length > 0) {
+            addText('Osiągnięcia:', 14);
+            workSummaryData.achievements.forEach((achievement, index) => {
+              if (achievement.name) {
+                addText(`${index + 1}. ${achievement.name}`, 12);
+                if (achievement.description) {
+                  addText(`   ${achievement.description}`, 10);
+                }
+              }
+            });
+            doc.moveDown(1);
+          }
+
+          // Contact info
+          addText('Kontakt:', 12);
+          addText('Jakub Czajka - Soft Synergy', 12);
+          addText('Email: jakub.czajka@soft-synergy.com', 12);
+          addText('Telefon: +48 793 868 886', 12);
+
+          doc.end();
+          stream.on('finish', resolve);
+          stream.on('error', reject);
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+      pdfUrl = `/generated-offers/${pdfFileName}`;
+      console.log('Work summary PDF generated successfully');
+    } catch (pdfError) {
+      console.error('Work summary PDF generation failed:', pdfError);
+    }
+
     // Update project with generated work summary URL
     project.workSummaryUrl = `/generated-offers/${fileName}`;
+    if (pdfUrl) {
+      project.workSummaryPdfUrl = pdfUrl;
+    }
     await project.save();
 
     // Log activity
@@ -1026,6 +1166,7 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
     res.json({
       message: 'Zestawienie pracy zostało wygenerowane pomyślnie',
       workSummaryUrl: `/generated-offers/${fileName}`,
+      workSummaryPdfUrl: pdfUrl,
       project: project
     });
 
