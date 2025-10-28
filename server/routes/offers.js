@@ -277,8 +277,24 @@ router.post('/generate/:projectId', auth, async (req, res) => {
         try {
           const doc = new PDFDocument({ 
             size: 'A4', 
-            margins: { top: 50, left: 50, right: 50, bottom: 50 } 
+            margins: { top: 50, left: 50, right: 50, bottom: 50 },
+            info: {
+              Title: 'Oferta',
+              Author: 'Soft Synergy'
+            }
           });
+          
+          // Register fonts that support Polish characters
+          try {
+            // Try to use system fonts with better Unicode support
+            const fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+            if (require('fs').existsSync(fontPath)) {
+              doc.registerFont('Regular', fontPath);
+            }
+          } catch (e) {
+            console.log('Custom fonts not available, using default');
+          }
+          
           const stream = require('fs').createWriteStream(pdfPath);
           doc.pipe(stream);
 
@@ -293,21 +309,12 @@ router.post('/generate/:projectId', auth, async (req, res) => {
             
             const textToAdd = String(text).replace(/\s+/g, ' ').trim();
             
-            const lines = doc.splitTextToSize(textToAdd, maxWidth);
-            const lineHeight = fontSize * 1.4;
-            
-            lines.forEach((line, index) => {
-              const yPos = doc.y + (index * lineHeight);
-              const xPos = options.align === 'center' 
-                ? (pageWidth - doc.widthOfString(line)) / 2 
-                : options.align === 'right'
-                ? pageWidth - margin - doc.widthOfString(line)
-                : margin;
-                
-              doc.text(line, xPos, yPos);
+            // Use simple text method with line wrapping
+            doc.text(textToAdd, margin, doc.y, {
+              width: maxWidth,
+              align: options.align || 'left',
+              lineGap: 2
             });
-            
-            doc.y += lines.length * lineHeight;
           };
 
           // Add logo and header
@@ -1240,8 +1247,24 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
         try {
           const doc = new PDFDocument({ 
             size: 'A4', 
-            margins: { top: 50, left: 50, right: 50, bottom: 50 } 
+            margins: { top: 50, left: 50, right: 50, bottom: 50 },
+            info: {
+              Title: 'Oferta',
+              Author: 'Soft Synergy'
+            }
           });
+          
+          // Register fonts that support Polish characters
+          try {
+            // Try to use system fonts with better Unicode support
+            const fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+            if (require('fs').existsSync(fontPath)) {
+              doc.registerFont('Regular', fontPath);
+            }
+          } catch (e) {
+            console.log('Custom fonts not available, using default');
+          }
+          
           const stream = require('fs').createWriteStream(pdfPath);
           doc.pipe(stream);
 
@@ -1256,21 +1279,12 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
             
             const textToAdd = String(text).replace(/\s+/g, ' ').trim();
             
-            const lines = doc.splitTextToSize(textToAdd, maxWidth);
-            const lineHeight = fontSize * 1.4;
-            
-            lines.forEach((line, index) => {
-              const yPos = doc.y + (index * lineHeight);
-              const xPos = options.align === 'center' 
-                ? (pageWidth - doc.widthOfString(line)) / 2 
-                : options.align === 'right'
-                ? pageWidth - margin - doc.widthOfString(line)
-                : margin;
-                
-              doc.text(line, xPos, yPos);
+            // Use simple text method with line wrapping
+            doc.text(textToAdd, margin, doc.y, {
+              width: maxWidth,
+              align: options.align || 'left',
+              lineGap: 2
             });
-            
-            doc.y += lines.length * lineHeight;
           };
 
           // Add logo and header
