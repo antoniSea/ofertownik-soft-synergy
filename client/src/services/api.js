@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https:///oferty.soft-synergy.com',
+  baseURL: process.env.REACT_APP_API_URL || 'https://oferty.soft-synergy.com',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -89,6 +89,10 @@ export const offersAPI = {
   getContractDraft: (projectId) => api.get(`/api/offers/contract-draft/${projectId}`).then(res => res.data),
   generateContract: (projectId, customText) => api.post(`/api/offers/generate-contract/${projectId}`, { customText }).then(res => res.data),
   generateWorkSummary: (projectId, data) => api.post(`/api/offers/generate-work-summary/${projectId}`, data).then(res => res.data),
+  uploadDocument: (projectId, formData) => api.post(`/api/offers/upload-document/${projectId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(res => res.data),
+  deleteDocument: (projectId, documentId) => api.delete(`/api/offers/delete-document/${projectId}/${documentId}`).then(res => res.data),
 
 }; 
 

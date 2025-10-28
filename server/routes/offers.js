@@ -3,12 +3,40 @@ const jsPDF = require('jspdf');
 const fs = require('fs').promises;
 const path = require('path');
 const handlebars = require('handlebars');
+const multer = require('multer');
 const Project = require('../models/Project');
 const Portfolio = require('../models/Portfolio');
 const Activity = require('../models/Activity');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../uploads/documents');
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Allow only PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
 
 // Simple i18n dictionary for offer template
 const i18n = {
@@ -241,45 +269,143 @@ router.post('/generate/:projectId', auth, async (req, res) => {
     let pdfUrl = null;
     
     try {
-      const { jsPDF } = require('jspdf');
-      const doc = new jsPDF();
-      
-      // Convert HTML to text for simple PDF generation
-      const textContent = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      
-      // Split text into lines that fit the page
-      const splitText = doc.splitTextToSize(textContent, 180);
-      
-      doc.setFontSize(12);
-      doc.text(splitText, 15, 20);
-      
-      const pdfBuffer = doc.output('arraybuffer');
-
-      // Clean up old PDF files for this project
-      try {
-        const existingFiles = await fs.readdir(outputDir);
-        const projectPdfFiles = existingFiles.filter(file => file.startsWith(`offer-${project._id}-`) && file.endsWith('.pdf'));
-        
-        // Delete old PDF files for this project
-        for (const oldPdfFile of projectPdfFiles) {
-          const oldPdfFilePath = path.join(outputDir, oldPdfFile);
-          await fs.unlink(oldPdfFilePath);
-          console.log(`Deleted old PDF file: ${oldPdfFile}`);
-        }
-      } catch (pdfCleanupError) {
-        console.error('Error cleaning up old PDF files:', pdfCleanupError);
-        // Continue with PDF generation even if cleanup fails
-      }
-
-      // Save PDF file
+      const PDFDocument = require('pdfkit');
       pdfFileName = `offer-${project._id}-${Date.now()}.pdf`;
       const pdfPath = path.join(outputDir, pdfFileName);
-      await fs.writeFile(pdfPath, pdfBuffer);
+
+      await new Promise((resolve, reject) => {
+        try {
+          const doc = new PDFDocument({ 
+            size: 'A4', 
+            margins: { top: 50, left: 50, right: 50, bottom: 50 } 
+          });
+          const stream = require('fs').createWriteStream(pdfPath);
+          doc.pipe(stream);
+
+          const cleanText = (text) => {
+            if (!text) return '';
+            return text.toString()
+              .replace(/[\u201C\u201D]/g, '"')
+              .replace(/[\u2018\u2019]/g, "'")
+              .replace(/[\u2013\u2014]/g, "-")
+              .replace(/[\u2026]/g, "...")
+              .replace(/\s+/g, ' ')
+              .trim();
+          };
+
+          const addText = (text, fontSize = 12, options = {}) => {
+            const cleanedText = cleanText(text);
+            const lines = doc.splitTextToSize(cleanedText, doc.page.width - doc.page.margins.left - doc.page.margins.right - 20);
+            doc.fontSize(fontSize).text(lines, options);
+          };
+
+          // Title
+          addText(`Oferta: ${project.name}`, 20, { align: 'center' });
+          doc.moveDown(1);
+          
+          // Client info
+          addText(`Klient: ${project.clientName}`, 14);
+          if (project.clientEmail) {
+            addText(`Email: ${project.clientEmail}`, 12);
+          }
+          if (project.clientPhone) {
+            addText(`Telefon: ${project.clientPhone}`, 12);
+          }
+          doc.moveDown(1);
+
+          // Offer number and date
+          addText(`Numer oferty: ${templateData.offerNumber}`, 12);
+          addText(`Data: ${templateData.offerDate}`, 12);
+          doc.moveDown(1);
+
+          // Description
+          if (project.description) {
+            addText('Opis projektu:', 14);
+            addText(project.description, 12);
+            doc.moveDown(1);
+          }
+
+          // Modules
+          if (project.modules && project.modules.length > 0) {
+            addText('Zakres prac:', 14);
+            project.modules.forEach((module, index) => {
+              addText(`${index + 1}. ${module.name}`, 12);
+              if (module.description) {
+                addText(`   ${module.description}`, 10);
+              }
+            });
+            doc.moveDown(1);
+          }
+
+          // Timeline
+          if (project.timeline) {
+            addText('Harmonogram:', 14);
+            if (project.timeline.phase1) {
+              addText(`• ${project.timeline.phase1.name}: ${project.timeline.phase1.duration}`, 12);
+            }
+            if (project.timeline.phase2) {
+              addText(`• ${project.timeline.phase2.name}: ${project.timeline.phase2.duration}`, 12);
+            }
+            if (project.timeline.phase3) {
+              addText(`• ${project.timeline.phase3.name}: ${project.timeline.phase3.duration}`, 12);
+            }
+            if (project.timeline.phase4) {
+              addText(`• ${project.timeline.phase4.name}: ${project.timeline.phase4.duration}`, 12);
+            }
+            doc.moveDown(1);
+          }
+
+          // Pricing
+          if (project.pricing) {
+            addText('Wycenienie:', 14);
+            if (project.pricing.phase1 > 0) {
+              addText(`Faza I: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase1)}`, 12);
+            }
+            if (project.pricing.phase2 > 0) {
+              addText(`Faza II: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase2)}`, 12);
+            }
+            if (project.pricing.phase3 > 0) {
+              addText(`Faza III: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase3)}`, 12);
+            }
+            if (project.pricing.phase4 > 0) {
+              addText(`Faza IV: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase4)}`, 12);
+            }
+            if (project.pricing.total) {
+              addText(`RAZEM: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.total)}`, 14);
+            }
+            doc.moveDown(1);
+          }
+
+          // Payment terms
+          if (project.customPaymentTerms) {
+            addText('Warunki płatności:', 14);
+            const paymentLines = project.customPaymentTerms.split('\n');
+            paymentLines.forEach(line => {
+              if (line.trim()) {
+                addText(line.trim(), 12);
+              }
+            });
+            doc.moveDown(1);
+          }
+
+          // Contact info
+          addText('Kontakt:', 12);
+          addText('Jakub Czajka - Soft Synergy', 12);
+          addText('Email: jakub.czajka@soft-synergy.com', 12);
+          addText('Telefon: +48 793 868 886', 12);
+
+          doc.end();
+          stream.on('finish', resolve);
+          stream.on('error', reject);
+        } catch (e) {
+          reject(e);
+        }
+      });
+
       pdfUrl = `/generated-offers/${pdfFileName}`;
-      
-      console.log('PDF generated successfully');
+      console.log('Offer PDF generated successfully');
     } catch (pdfError) {
-      console.error('PDF generation failed:', pdfError);
+      console.error('Offer PDF generation failed:', pdfError);
       console.log('Continuing with HTML generation only');
     }
 
@@ -1174,6 +1300,133 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
     console.error('Generate work summary error:', error);
     res.status(500).json({ message: 'Błąd serwera podczas generowania zestawienia pracy' });
   }
+});
+
+// Document upload routes
+router.post('/upload-document/:projectId', auth, upload.single('document'), async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId);
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Projekt nie został znaleziony' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'Nie wybrano pliku' });
+    }
+
+    const { documentType } = req.body;
+    
+    if (!documentType || !['proforma', 'vat'].includes(documentType)) {
+      return res.status(400).json({ message: 'Nieprawidłowy typ dokumentu' });
+    }
+
+    // Create uploads directory if it doesn't exist
+    const uploadDir = path.join(__dirname, '../uploads/documents');
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const document = {
+      type: documentType,
+      fileName: req.file.filename,
+      originalName: req.file.originalname,
+      filePath: `/uploads/documents/${req.file.filename}`,
+      fileSize: req.file.size,
+      uploadedBy: req.user._id
+    };
+
+    project.documents.push(document);
+    await project.save();
+
+    // Log activity
+    try {
+      await Activity.create({
+        action: 'document.uploaded',
+        entityType: 'project',
+        entityId: project._id,
+        author: req.user._id,
+        message: `Document uploaded: ${documentType} - ${req.file.originalname}`,
+        metadata: { documentType, fileName: req.file.originalname }
+      });
+    } catch (e) {
+      // ignore logging errors
+    }
+
+    res.json({
+      message: 'Dokument został przesłany pomyślnie',
+      document: document
+    });
+
+  } catch (error) {
+    console.error('Upload document error:', error);
+    res.status(500).json({ message: 'Błąd serwera podczas przesyłania dokumentu' });
+  }
+});
+
+// Delete document
+router.delete('/delete-document/:projectId/:documentId', auth, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId);
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Projekt nie został znaleziony' });
+    }
+
+    const document = project.documents.id(req.params.documentId);
+    
+    if (!document) {
+      return res.status(404).json({ message: 'Dokument nie został znaleziony' });
+    }
+
+    // Delete file from filesystem
+    try {
+      const filePath = path.join(__dirname, '..', document.filePath);
+      await fs.unlink(filePath);
+    } catch (fileError) {
+      console.error('Error deleting file:', fileError);
+      // Continue even if file deletion fails
+    }
+
+    // Remove document from project
+    project.documents.pull(req.params.documentId);
+    await project.save();
+
+    // Log activity
+    try {
+      await Activity.create({
+        action: 'document.deleted',
+        entityType: 'project',
+        entityId: project._id,
+        author: req.user._id,
+        message: `Document deleted: ${document.type} - ${document.originalName}`,
+        metadata: { documentType: document.type, fileName: document.originalName }
+      });
+    } catch (e) {
+      // ignore logging errors
+    }
+
+    res.json({
+      message: 'Dokument został usunięty pomyślnie'
+    });
+
+  } catch (error) {
+    console.error('Delete document error:', error);
+    res.status(500).json({ message: 'Błąd serwera podczas usuwania dokumentu' });
+  }
+});
+
+// Serve uploaded documents
+router.get('/documents/:filename', (req, res) => {
+  const filePath = path.join(__dirname, '../uploads/documents', req.params.filename);
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline');
+  
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving document:', err);
+      res.status(404).json({ message: 'Dokument nie został znaleziony' });
+    }
+  });
 });
 
 module.exports = router;

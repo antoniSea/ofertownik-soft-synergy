@@ -17,7 +17,9 @@ import {
   FileCheck,
   X,
   Plus,
-  Trash2
+  Trash2,
+  Upload,
+  File
 } from 'lucide-react';
 import { projectsAPI, offersAPI, authAPI } from '../services/api';
 import { useI18n } from '../contexts/I18nContext';
@@ -30,6 +32,9 @@ const ProjectDetail = () => {
   const { t } = useI18n();
 
   const [showWorkSummaryModal, setShowWorkSummaryModal] = React.useState(false);
+  const [showDocumentUploadModal, setShowDocumentUploadModal] = React.useState(false);
+  const [selectedDocumentType, setSelectedDocumentType] = React.useState('proforma');
+  const [selectedFile, setSelectedFile] = React.useState(null);
   const [workSummaryData, setWorkSummaryData] = React.useState({
     summaryDescription: '',
     periodStart: '',
@@ -82,7 +87,7 @@ const ProjectDetail = () => {
       // Automatycznie pobierz PDF
       if (response.pdfUrl) {
         const link = document.createElement('a');
-        link.href = `https:///oferty.soft-synergy.com${response.pdfUrl}`;
+        link.href = `https://oferty.soft-synergy.com${response.pdfUrl}`;
         link.download = response.fileName || 'oferta.pdf';
         document.body.appendChild(link);
         link.click();
@@ -101,6 +106,24 @@ const ProjectDetail = () => {
       queryClient.invalidateQueries(['project', id]);
     },
     onError: () => toast.error('Błąd podczas generowania zestawienia pracy')
+  });
+
+  const uploadDocumentMutation = useMutation((formData) => offersAPI.uploadDocument(id, formData), {
+    onSuccess: () => {
+      toast.success('Dokument został przesłany pomyślnie!');
+      setShowDocumentUploadModal(false);
+      setSelectedFile(null);
+      queryClient.invalidateQueries(['project', id]);
+    },
+    onError: () => toast.error('Błąd podczas przesyłania dokumentu')
+  });
+
+  const deleteDocumentMutation = useMutation((documentId) => offersAPI.deleteDocument(id, documentId), {
+    onSuccess: () => {
+      toast.success('Dokument został usunięty pomyślnie!');
+      queryClient.invalidateQueries(['project', id]);
+    },
+    onError: () => toast.error('Błąd podczas usuwania dokumentu')
   });
 
   const getStatusConfig = (status) => {
@@ -209,6 +232,46 @@ const ProjectDetail = () => {
       keyFeatures: project.modules || []
     }));
     setShowWorkSummaryModal(true);
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        toast.error('Tylko pliki PDF są dozwolone');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Plik jest za duży. Maksymalny rozmiar to 10MB');
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleDocumentUpload = () => {
+    if (!selectedFile) {
+      toast.error('Wybierz plik do przesłania');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('document', selectedFile);
+    formData.append('documentType', selectedDocumentType);
+
+    uploadDocumentMutation.mutate(formData);
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getDocumentTypeLabel = (type) => {
+    return type === 'proforma' ? 'Faktura Proforma' : 'Faktura VAT';
   };
 
   if (isLoading) {
@@ -353,6 +416,61 @@ const ProjectDetail = () => {
               ))}
             </div>
           </div>
+
+          {/* Documents */}
+          <div className="card">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium text-gray-900">Dokumenty</h2>
+              <button
+                onClick={() => setShowDocumentUploadModal(true)}
+                className="btn-secondary flex items-center"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Dodaj dokument
+              </button>
+            </div>
+            
+            {project.documents && project.documents.length > 0 ? (
+              <div className="space-y-3">
+                {project.documents.map((doc) => (
+                  <div key={doc._id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <File className="h-5 w-5 text-red-500" />
+                        <div>
+                          <p className="font-medium text-gray-900">{doc.originalName}</p>
+                          <p className="text-sm text-gray-500">
+                            {getDocumentTypeLabel(doc.type)} • {formatFileSize(doc.fileSize)} • 
+                            {new Date(doc.uploadedAt).toLocaleDateString('pl-PL')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <a
+                          href={`/api/offers/documents/${doc.fileName}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary flex items-center"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Podgląd
+                        </a>
+                        <button
+                          onClick={() => deleteDocumentMutation.mutate(doc._id)}
+                          disabled={deleteDocumentMutation.isLoading}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Brak załączonych dokumentów.</p>
+            )}
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -480,7 +598,7 @@ const ProjectDetail = () => {
               {project.generatedOfferUrl && (
                 <div className="pt-3 space-y-2">
                   <a
-                    href={`https:///oferty.soft-synergy.com${project.generatedOfferUrl}`}
+                    href={`https://oferty.soft-synergy.com${project.generatedOfferUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-primary w-full flex items-center justify-center"
@@ -490,7 +608,7 @@ const ProjectDetail = () => {
                   </a>
                   {project.pdfUrl ? (
                     <a
-                      href={`https:///oferty.soft-synergy.com${project.pdfUrl}`}
+                      href={`https://oferty.soft-synergy.com${project.pdfUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-secondary w-full flex items-center justify-center"
@@ -513,7 +631,7 @@ const ProjectDetail = () => {
               {project.workSummaryUrl && (
                 <div className="pt-3 space-y-2">
                   <a
-                    href={`https:///oferty.soft-synergy.com${project.workSummaryUrl}`}
+                    href={`https://oferty.soft-synergy.com${project.workSummaryUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-primary w-full flex items-center justify-center"
@@ -523,7 +641,7 @@ const ProjectDetail = () => {
                   </a>
                   {project.workSummaryPdfUrl ? (
                     <a
-                      href={`https:///oferty.soft-synergy.com${project.workSummaryPdfUrl}`}
+                      href={`https://oferty.soft-synergy.com${project.workSummaryPdfUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-secondary w-full flex items-center justify-center"
@@ -791,6 +909,75 @@ const ProjectDetail = () => {
                   >
                     <FileCheck className="h-4 w-4 mr-2" />
                     {generateWorkSummaryMutation.isLoading ? 'Generuję...' : 'Generuj zestawienie'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Upload Modal */}
+      {showDocumentUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Dodaj dokument</h2>
+                <button
+                  onClick={() => setShowDocumentUploadModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Typ dokumentu
+                  </label>
+                  <select
+                    value={selectedDocumentType}
+                    onChange={(e) => setSelectedDocumentType(e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="proforma">Faktura Proforma</option>
+                    <option value="vat">Faktura VAT</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Wybierz plik PDF
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileSelect}
+                    className="input-field"
+                  />
+                  {selectedFile && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Wybrany plik: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end space-x-4 pt-4">
+                  <button
+                    onClick={() => setShowDocumentUploadModal(false)}
+                    className="btn-secondary"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    onClick={handleDocumentUpload}
+                    disabled={uploadDocumentMutation.isLoading || !selectedFile}
+                    className="btn-primary flex items-center"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploadDocumentMutation.isLoading ? 'Przesyłam...' : 'Prześlij'}
                   </button>
                 </div>
               </div>

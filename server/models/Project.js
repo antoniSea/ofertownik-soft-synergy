@@ -171,6 +171,38 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  documents: [{
+    type: {
+      type: String,
+      enum: ['proforma', 'vat'],
+      required: true
+    },
+    fileName: {
+      type: String,
+      required: true
+    },
+    originalName: {
+      type: String,
+      required: true
+    },
+    filePath: {
+      type: String,
+      required: true
+    },
+    fileSize: {
+      type: Number,
+      required: true
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    },
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    }
+  }],
   notes: [{
     text: { type: String, required: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

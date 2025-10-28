@@ -47,6 +47,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files
 app.use('/uploads/portfolio', express.static(path.join(__dirname, '../uploads/portfolio')));
+app.use('/uploads/documents', express.static(path.join(__dirname, '../uploads/documents')));
 
 // Generated offers with cache-busting
 app.use('/generated-offers', (req, res, next) => {
@@ -55,7 +56,7 @@ app.use('/generated-offers', (req, res, next) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   next();
-}, express.static(path.join(__dirname, 'generated-offers')));
+}, express.static(path.join(__dirname, '../generated-offers')));
 
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
 app.use('/img', express.static(path.join(__dirname, 'public/img')));

@@ -74,7 +74,7 @@ const Projects = () => {
       // Automatycznie pobierz PDF
       if (response.pdfUrl) {
         const link = document.createElement('a');
-        link.href = `https:///oferty.soft-synergy.com${response.pdfUrl}`;
+        link.href = `https://oferty.soft-synergy.com${response.pdfUrl}`;
         link.download = response.fileName || 'oferta.pdf';
         document.body.appendChild(link);
         link.click();
@@ -270,7 +270,7 @@ const Projects = () => {
               <div className="flex items-center space-x-2 ml-4">
                 {project.generatedOfferUrl ? (
                   <a
-                    href={`https:///oferty.soft-synergy.com${project.generatedOfferUrl}`}
+                    href={`https://oferty.soft-synergy.com${project.generatedOfferUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 text-gray-400 hover:text-green-600 group relative"
@@ -295,7 +295,7 @@ const Projects = () => {
                 )}
                 {project.pdfUrl ? (
                   <a
-                    href={`https:///oferty.soft-synergy.com${project.pdfUrl}`}
+                    href={`https://oferty.soft-synergy.com${project.pdfUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 text-gray-400 hover:text-red-600 group relative"
@@ -320,7 +320,7 @@ const Projects = () => {
                 ) : null}
                 {project.contractPdfUrl ? (
                   <a
-                    href={`https:///oferty.soft-synergy.com${project.contractPdfUrl}`}
+                    href={`https://oferty.soft-synergy.com${project.contractPdfUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 text-gray-400 hover:text-emerald-600 group relative"
