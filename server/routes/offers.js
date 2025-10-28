@@ -285,12 +285,39 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           const addText = (text, fontSize = 12, options = {}) => {
             if (!text) return;
             doc.fontSize(fontSize);
-            doc.text(String(text).replace(/\s+/g, ' ').trim(), options);
+            
+            const margin = 50;
+            const pageWidth = doc.page.width;
+            const maxWidth = pageWidth - (margin * 2);
+            
+            doc.text(String(text).replace(/\s+/g, ' ').trim(), margin, doc.y, {
+              width: maxWidth,
+              align: options.align || 'left',
+              lineGap: 5
+            });
           };
 
-          // Title
-          addText(`Oferta: ${project.name}`, 20, { align: 'center' });
-          doc.moveDown(1);
+          // Add logo at the top
+          try {
+            const logoPath = path.join(__dirname, '../generated-offers/logo-removebg-preview.png');
+            if (require('fs').existsSync(logoPath)) {
+              doc.image(logoPath, 50, 20, { width: 60, height: 60 });
+            }
+          } catch (e) {
+            console.log('Logo not found, continuing without it');
+          }
+
+          // Title with branding colors
+          doc.fontSize(20).font('Helvetica-Bold');
+          doc.fillColor('#3B82F6') // Blue
+            .text('Soft', 120, 35, { align: 'left' });
+          doc.fillColor('#A855F7') // Purple
+            .text('Synergy', { continued: true });
+          
+          doc.fillColor('#000000'); // Reset to black for normal text
+          doc.font('Helvetica');
+          
+          doc.moveDown(2);
           
           // Client info
           addText(`Klient: ${project.clientName}`, 14);
