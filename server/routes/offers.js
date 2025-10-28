@@ -282,21 +282,10 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           const stream = require('fs').createWriteStream(pdfPath);
           doc.pipe(stream);
 
-          const cleanText = (text) => {
-            if (!text) return '';
-            return text.toString()
-              .replace(/[\u201C\u201D]/g, '"')
-              .replace(/[\u2018\u2019]/g, "'")
-              .replace(/[\u2013\u2014]/g, "-")
-              .replace(/[\u2026]/g, "...")
-              .replace(/\s+/g, ' ')
-              .trim();
-          };
-
           const addText = (text, fontSize = 12, options = {}) => {
-            const cleanedText = cleanText(text);
+            if (!text) return;
             doc.fontSize(fontSize);
-            doc.text(cleanedText, options);
+            doc.text(String(text).replace(/\s+/g, ' ').trim(), options);
           };
 
           // Title
@@ -1160,21 +1149,10 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           const stream = require('fs').createWriteStream(pdfPath);
           doc.pipe(stream);
 
-          const cleanText = (text) => {
-            if (!text) return '';
-            return text.toString()
-              .replace(/[\u201C\u201D]/g, '"')
-              .replace(/[\u2018\u2019]/g, "'")
-              .replace(/[\u2013\u2014]/g, "-")
-              .replace(/[\u2026]/g, "...")
-              .replace(/\s+/g, ' ')
-              .trim();
-          };
-
           const addText = (text, fontSize = 12, options = {}) => {
-            const cleanedText = cleanText(text);
+            if (!text) return;
             doc.fontSize(fontSize);
-            doc.text(cleanedText, options);
+            doc.text(String(text).replace(/\s+/g, ' ').trim(), options);
           };
 
           // Title

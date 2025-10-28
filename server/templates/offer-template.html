@@ -59,21 +59,26 @@
         
         <header class="glass-card p-8 mb-16 reveal">
             <div class="flex justify-between items-start flex-wrap gap-6">
-                <div>
-                    <h1 class="text-3xl font-extrabold">Soft<span class="text-blue-500">Synergy</span></h1>
-                    <p class="text-slate-400 print-text-gray">{{t.companyTagline}}</p>
+                <div class="flex items-center gap-4">
+                    <img src="https://oferty.soft-synergy.com/generated-offers/logo-removebg-preview.png" alt="Soft Synergy Logo" class="w-20 h-20 object-contain">
+                    <div>
+                        <h1 class="text-4xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 bg-clip-text text-transparent">
+                            Soft<span class="text-blue-500">Synergy</span>
+                        </h1>
+                        <p class="text-slate-400 print-text-gray font-medium">{{t.companyTagline}}</p>
+                    </div>
                 </div>
                 <div class="text-left sm:text-right">
-                    <h2 class="text-2xl font-bold text-blue-400">{{t.offerTitle}}</h2>
-                    <p class="text-slate-400 print-text-gray">{{t.date}}: <span class="font-semibold text-slate-300 print-text-black">{{offerDate}}</span></p>
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{{t.offerTitle}}</h2>
+                    <p class="text-slate-400 print-text-gray mt-2">{{t.date}}: <span class="font-semibold text-slate-300 print-text-black">{{offerDate}}</span></p>
                     <p class="text-slate-400 print-text-gray">{{t.number}}: <span class="font-semibold text-slate-300 print-text-black">{{offerNumber}}</span></p>
                 </div>
             </div>
-            <div class="border-t border-white/10 my-6"></div>
-            <div>
-                <span class="text-slate-400 print-text-gray">{{t.forLabel}}</span>
-                <p class="text-xl font-bold">{{clientName}}</p>
-                <p class="text-slate-300 print-text-gray">Do rąk: {{clientContact}}</p>
+            <div class="border-t border-white/10 my-6 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600"></div>
+            <div class="bg-gradient-to-r from-blue-600/10 to-purple-600/10 p-6 rounded-lg">
+                <span class="text-slate-400 print-text-gray font-semibold">{{t.forLabel}}</span>
+                <p class="text-xl font-bold text-white print-text-black">{{clientName}}</p>
+                <p class="text-slate-300 print-text-gray font-medium">Do rąk: {{clientContact}}</p>
             </div>
         </header>
 
@@ -308,9 +313,15 @@
             </section>
         </main>
         
-        <footer class="text-center py-12 mt-16 border-t border-white/10">
-            <p class="font-bold print-text-black">Soft Synergy</p>
-            <p class="text-sm text-slate-400 print-text-gray">{{companyEmail}} | {{companyPhone}}</p>
+        <footer class="text-center py-12 mt-16 border-t border-white/10 bg-gradient-to-b from-transparent to-blue-500/5">
+            <div class="flex items-center justify-center gap-4 mb-4">
+                <img src="https://oferty.soft-synergy.com/generated-offers/logo-removebg-preview.png" alt="Soft Synergy Logo" class="w-12 h-12 object-contain">
+                <h3 class="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 bg-clip-text text-transparent">
+                    Soft<span class="text-blue-500">Synergy</span>
+                </h3>
+            </div>
+            <p class="text-sm text-slate-400 print-text-gray mb-2">Innowacyjne rozwiązania programistyczne</p>
+            <p class="text-sm text-slate-300 print-text-gray font-medium">{{companyEmail}} | {{companyPhone}}</p>
             <div class="max-w-2xl mx-auto mt-8 text-left text-xs text-slate-400 print-text-gray bg-white/5 rounded-lg p-4 border border-white/10">
                 <h3 class="font-bold mb-2 text-slate-300 print-text-black">{{t.reservations}}</h3>
                 <ul class="list-disc pl-5 space-y-1">
@@ -323,6 +334,11 @@
                         {{/each}}
                     {{/if}}
                 </ul>
+            </div>
+            <div class="mt-6 flex items-center justify-center gap-4 text-xs text-slate-500 print-text-gray">
+                <span>© 2024 Soft Synergy</span>
+                <span>•</span>
+                <span>Wszystkie prawa zastrzeżone</span>
             </div>
         </footer>
     </div>
