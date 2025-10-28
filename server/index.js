@@ -56,7 +56,7 @@ app.use('/generated-offers', (req, res, next) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   next();
-}, express.static(path.join(__dirname, '../generated-offers')));
+}, express.static(path.join(__dirname, 'generated-offers')));
 
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
 app.use('/img', express.static(path.join(__dirname, 'public/img')));
