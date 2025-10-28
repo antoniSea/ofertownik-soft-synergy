@@ -284,17 +284,30 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           const addText = (text, fontSize = 12, options = {}) => {
             if (!text) return;
-            doc.fontSize(fontSize);
             
             const margin = 50;
             const pageWidth = doc.page.width;
             const maxWidth = pageWidth - (margin * 2);
             
-            doc.text(String(text).replace(/\s+/g, ' ').trim(), margin, doc.y, {
-              width: maxWidth,
-              align: options.align || 'left',
-              lineGap: 5
+            doc.fontSize(fontSize);
+            
+            const textToAdd = String(text).replace(/\s+/g, ' ').trim();
+            
+            const lines = doc.splitTextToSize(textToAdd, maxWidth);
+            const lineHeight = fontSize * 1.4;
+            
+            lines.forEach((line, index) => {
+              const yPos = doc.y + (index * lineHeight);
+              const xPos = options.align === 'center' 
+                ? (pageWidth - doc.widthOfString(line)) / 2 
+                : options.align === 'right'
+                ? pageWidth - margin - doc.widthOfString(line)
+                : margin;
+                
+              doc.text(line, xPos, yPos);
             });
+            
+            doc.y += lines.length * lineHeight;
           };
 
           // Add logo and header
@@ -1234,17 +1247,30 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
 
           const addText = (text, fontSize = 12, options = {}) => {
             if (!text) return;
-            doc.fontSize(fontSize);
             
             const margin = 50;
             const pageWidth = doc.page.width;
             const maxWidth = pageWidth - (margin * 2);
             
-            doc.text(String(text).replace(/\s+/g, ' ').trim(), margin, doc.y, {
-              width: maxWidth,
-              align: options.align || 'left',
-              lineGap: 5
+            doc.fontSize(fontSize);
+            
+            const textToAdd = String(text).replace(/\s+/g, ' ').trim();
+            
+            const lines = doc.splitTextToSize(textToAdd, maxWidth);
+            const lineHeight = fontSize * 1.4;
+            
+            lines.forEach((line, index) => {
+              const yPos = doc.y + (index * lineHeight);
+              const xPos = options.align === 'center' 
+                ? (pageWidth - doc.widthOfString(line)) / 2 
+                : options.align === 'right'
+                ? pageWidth - margin - doc.widthOfString(line)
+                : margin;
+                
+              doc.text(line, xPos, yPos);
             });
+            
+            doc.y += lines.length * lineHeight;
           };
 
           // Add logo and header
