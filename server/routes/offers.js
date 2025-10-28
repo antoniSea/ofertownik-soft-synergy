@@ -297,53 +297,83 @@ router.post('/generate/:projectId', auth, async (req, res) => {
             });
           };
 
-          // Add logo at the top
+          // Add logo and header
+          let currentY = 20;
+          
+          // Try to add logo
           try {
             const logoPath = path.join(__dirname, '../generated-offers/logo-removebg-preview.png');
             if (require('fs').existsSync(logoPath)) {
-              doc.image(logoPath, 50, 20, { width: 60, height: 60 });
+              doc.image(logoPath, 50, currentY, { width: 80, height: 80 });
+              currentY = 120; // Position below logo
+            } else {
+              currentY = 40;
             }
           } catch (e) {
-            console.log('Logo not found, continuing without it');
+            console.log('Logo not found');
+            currentY = 40;
           }
 
-          // Title with branding colors
-          doc.fontSize(20).font('Helvetica-Bold');
-          doc.fillColor('#3B82F6') // Blue
-            .text('Soft', 120, 35, { align: 'left' });
-          doc.fillColor('#A855F7') // Purple
-            .text('Synergy', { continued: true });
+          // Add company name with colors
+          doc.fontSize(24).font('Helvetica-Bold');
           
-          doc.fillColor('#000000'); // Reset to black for normal text
-          doc.font('Helvetica');
+          // Calculate width first
+          const testSoft = doc.widthOfString('Soft');
+          const testSynergy = doc.widthOfString('Synergy');
           
-          doc.moveDown(2);
+          doc.fillColor('#3B82F6')
+            .text('Soft', 50, currentY);
           
-          // Client info
-          addText(`Klient: ${project.clientName}`, 14);
-          if (project.clientEmail) {
-            addText(`Email: ${project.clientEmail}`, 12);
-          }
-          if (project.clientPhone) {
-            addText(`Telefon: ${project.clientPhone}`, 12);
-          }
+          doc.fillColor('#A855F7')
+            .text('Synergy', 50 + testSoft, currentY);
+          
+          // Reset color and font
+          doc.fillColor('#000000');
+          doc.fontSize(16).font('Helvetica').fillColor('#666666');
+          doc.text('Innowacyjne rozwiązania programistyczne', 50, currentY + 35, {
+            width: 450,
+            align: 'left'
+          });
+          
+          // Reset to black for content
+          doc.fillColor('#000000');
+          doc.y = currentY + 60; // Move cursor down
           doc.moveDown(1);
+          
+          // Add title
+          doc.fontSize(18).font('Helvetica-Bold').fillColor('#1e40af');
+          addText(`OFERTA: ${project.name}`, 16, { align: 'center' });
+          doc.moveDown(0.8);
+          
+          doc.fillColor('#000000');
+          doc.fontSize(12);
+          
+          // Client info with styling
+          doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af');
+          doc.text('Klient:', 50, doc.y);
+          doc.font('Helvetica').fillColor('#000000');
+          doc.text(project.clientName, 100, doc.y);
+          doc.y += 20;
 
           // Offer number and date
           addText(`Numer oferty: ${templateData.offerNumber}`, 12);
           addText(`Data: ${templateData.offerDate}`, 12);
           doc.moveDown(1);
 
-          // Description
+          // Description with colored header
           if (project.description) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#a855f7');
             addText('Opis projektu:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             addText(project.description, 12);
             doc.moveDown(1);
           }
 
           // Modules
           if (project.modules && project.modules.length > 0) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#3b82f6');
             addText('Zakres prac:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             project.modules.forEach((module, index) => {
               addText(`${index + 1}. ${module.name}`, 12);
               if (module.description) {
@@ -355,7 +385,9 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           // Timeline
           if (project.timeline) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#a855f7');
             addText('Harmonogram:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             if (project.timeline.phase1) {
               addText(`• ${project.timeline.phase1.name}: ${project.timeline.phase1.duration}`, 12);
             }
@@ -373,7 +405,9 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           // Pricing
           if (project.pricing) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#10b981');
             addText('Wycenienie:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             if (project.pricing.phase1 > 0) {
               addText(`Faza I: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase1)}`, 12);
             }
@@ -404,11 +438,33 @@ router.post('/generate/:projectId', auth, async (req, res) => {
             doc.moveDown(1);
           }
 
-          // Contact info
-          addText('Kontakt:', 12);
-          addText('Jakub Czajka - Soft Synergy', 12);
-          addText('Email: jakub.czajka@soft-synergy.com', 12);
-          addText('Telefon: +48 793 868 886', 12);
+          // Footer with branding
+          doc.moveDown(1);
+          doc.fillColor('#cccccc')
+            .rect(50, doc.y, 500, 1)
+            .fill();
+          doc.y += 10;
+          
+          // Company name with colors
+          doc.fontSize(14).font('Helvetica-Bold');
+          
+          const footerSoft = doc.widthOfString('Soft');
+          
+          doc.fillColor('#3B82F6')
+            .text('Soft', 50, doc.y);
+          doc.fillColor('#A855F7')
+            .text('Synergy', 50 + footerSoft, doc.y);
+          
+          doc.y += 20;
+          doc.fontSize(10).font('Helvetica').fillColor('#666666');
+          doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, doc.y, {
+            width: 500
+          });
+          
+          doc.y += 15;
+          doc.text('Innowacyjne rozwiązania programistyczne', 50, doc.y, {
+            width: 500
+          });
 
           doc.end();
           stream.on('finish', resolve);
@@ -1179,35 +1235,91 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           const addText = (text, fontSize = 12, options = {}) => {
             if (!text) return;
             doc.fontSize(fontSize);
-            doc.text(String(text).replace(/\s+/g, ' ').trim(), options);
+            
+            const margin = 50;
+            const pageWidth = doc.page.width;
+            const maxWidth = pageWidth - (margin * 2);
+            
+            doc.text(String(text).replace(/\s+/g, ' ').trim(), margin, doc.y, {
+              width: maxWidth,
+              align: options.align || 'left',
+              lineGap: 5
+            });
           };
 
-          // Title
-          addText(`Zestawienie Prac: ${project.name}`, 20, { align: 'center' });
+          // Add logo and header
+          let currentY = 20;
+          
+          try {
+            const logoPath = path.join(__dirname, '../generated-offers/logo-removebg-preview.png');
+            if (require('fs').existsSync(logoPath)) {
+              doc.image(logoPath, 50, currentY, { width: 80, height: 80 });
+              currentY = 120;
+            } else {
+              currentY = 40;
+            }
+          } catch (e) {
+            currentY = 40;
+          }
+
+          // Add company name with colors
+          doc.fontSize(24).font('Helvetica-Bold');
+          doc.fillColor('#3B82F6')
+            .text('Soft', 50, currentY);
+          let softW = doc.widthOfString('Soft');
+          doc.fillColor('#A855F7')
+            .text('Synergy', 50 + softW, currentY);
+          
+          doc.fillColor('#000000');
+          doc.fontSize(16).font('Helvetica').fillColor('#666666');
+          doc.text('Innowacyjne rozwiązania programistyczne', 50, currentY + 35, {
+            width: 450
+          });
+          
+          doc.fillColor('#000000');
+          doc.y = currentY + 60;
           doc.moveDown(1);
           
-          // Client info
-          addText(`Klient: ${project.clientName}`, 14);
-          addText(`Numer zestawienia: ${workSummaryData.summaryNumber}`, 12);
-          addText(`Data: ${workSummaryData.summaryDate}`, 12);
+          // Title with branding
+          doc.fontSize(20).font('Helvetica-Bold').fillColor('#1e40af');
+          addText(`ZESTAWIENIE PRAC: ${project.name}`, 18, { align: 'center' });
           doc.moveDown(1);
+          doc.font('Helvetica').fillColor('#000000');
+          
+          // Client info with styling
+          doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af');
+          doc.text('Klient:', 50, doc.y);
+          doc.font('Helvetica').fillColor('#000000');
+          doc.text(project.clientName, 100, doc.y);
+          doc.y += 20;
+          doc.text(`Numer zestawienia: ${workSummaryData.summaryNumber}`, 50, doc.y);
+          doc.y += 15;
+          doc.text(`Data: ${workSummaryData.summaryDate}`, 50, doc.y);
+          doc.y += 20;
+          doc.moveDown(0.5);
 
-          // Description
+          // Description with colored header
           if (workSummaryData.summaryDescription) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#a855f7');
             addText('Opis zestawienia:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             addText(workSummaryData.summaryDescription, 12);
             doc.moveDown(1);
           }
 
-          // Project details
+          // Project details with colored header
+          doc.fontSize(14).font('Helvetica-Bold').fillColor('#3b82f6');
           addText('Szczegóły projektu:', 14);
+          doc.font('Helvetica').fillColor('#000000');
           addText(`Okres realizacji: ${workSummaryData.periodStart} - ${workSummaryData.periodEnd}`, 12);
           addText(`Status: ${workSummaryData.status}`, 12);
           doc.moveDown(1);
 
           // Completed tasks
           if (workSummaryData.completedTasks && workSummaryData.completedTasks.length > 0) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#10b981');
             addText('Wykonane zadania:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             workSummaryData.completedTasks.forEach((task, index) => {
               if (task.name) {
                 addText(`${index + 1}. ${task.name}`, 12);
@@ -1224,7 +1336,9 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
 
           // Statistics
           if (workSummaryData.statistics && workSummaryData.statistics.length > 0) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#f59e0b');
             addText('Statystyki projektu:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             workSummaryData.statistics.forEach(stat => {
               if (stat.label && stat.value) {
                 addText(`• ${stat.label}: ${stat.value}`, 12);
@@ -1235,7 +1349,9 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
 
           // Achievements
           if (workSummaryData.achievements && workSummaryData.achievements.length > 0) {
+            doc.fontSize(14).font('Helvetica-Bold').fillColor('#8b5cf6');
             addText('Osiągnięcia:', 14);
+            doc.font('Helvetica').fillColor('#000000');
             workSummaryData.achievements.forEach((achievement, index) => {
               if (achievement.name) {
                 addText(`${index + 1}. ${achievement.name}`, 12);
@@ -1247,11 +1363,33 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
             doc.moveDown(1);
           }
 
-          // Contact info
-          addText('Kontakt:', 12);
-          addText('Jakub Czajka - Soft Synergy', 12);
-          addText('Email: jakub.czajka@soft-synergy.com', 12);
-          addText('Telefon: +48 793 868 886', 12);
+          // Footer with branding
+          doc.moveDown(1);
+          doc.fillColor('#cccccc')
+            .rect(50, doc.y, 500, 1)
+            .fill();
+          doc.y += 10;
+          
+          // Company name with colors
+          doc.fontSize(14).font('Helvetica-Bold');
+          
+          const footerSoft = doc.widthOfString('Soft');
+          
+          doc.fillColor('#3B82F6')
+            .text('Soft', 50, doc.y);
+          doc.fillColor('#A855F7')
+            .text('Synergy', 50 + footerSoft, doc.y);
+          
+          doc.y += 20;
+          doc.fontSize(10).font('Helvetica').fillColor('#666666');
+          doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, doc.y, {
+            width: 500
+          });
+          
+          doc.y += 15;
+          doc.text('Innowacyjne rozwiązania programistyczne', 50, doc.y, {
+            width: 500
+          });
 
           doc.end();
           stream.on('finish', resolve);
