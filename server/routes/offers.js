@@ -301,19 +301,14 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           const addText = (text, fontSize = 12, options = {}) => {
             if (!text) return;
             
-            const margin = 50;
-            const pageWidth = doc.page.width;
-            const maxWidth = pageWidth - (margin * 2);
+            const x = 50;
+            const width = 495;
             
             doc.fontSize(fontSize);
-            
-            const textToAdd = String(text).replace(/\s+/g, ' ').trim();
-            
-            // Use simple text method with line wrapping
-            doc.text(textToAdd, margin, doc.y, {
-              width: maxWidth,
+            doc.text(String(text), x, doc.y, {
+              width: width,
               align: options.align || 'left',
-              lineGap: 2
+              lineGap: 4
             });
           };
 
@@ -362,23 +357,14 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           
           // Add title
           doc.fontSize(18).font('Helvetica-Bold').fillColor('#1e40af');
-          addText(`OFERTA: ${project.name}`, 16, { align: 'center' });
-          doc.moveDown(0.8);
+          addText(`OFERTA: ${project.name}`, 18, { align: 'center' });
+          doc.moveDown(1);
           
-          doc.fillColor('#000000');
-          doc.fontSize(12);
-          
-          // Client info with styling
-          doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af');
-          doc.text('Klient:', 50, doc.y);
-          doc.font('Helvetica').fillColor('#000000');
-          doc.text(project.clientName, 100, doc.y);
-          doc.y += 20;
-
-          // Offer number and date
+          // Client info
+          addText(`Klient: ${project.clientName}`, 12);
           addText(`Numer oferty: ${templateData.offerNumber}`, 12);
           addText(`Data: ${templateData.offerDate}`, 12);
-          doc.moveDown(1);
+          doc.moveDown(1.5);
 
           // Description with colored header
           if (project.description) {
@@ -1271,19 +1257,14 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           const addText = (text, fontSize = 12, options = {}) => {
             if (!text) return;
             
-            const margin = 50;
-            const pageWidth = doc.page.width;
-            const maxWidth = pageWidth - (margin * 2);
+            const x = 50;
+            const width = 495;
             
             doc.fontSize(fontSize);
-            
-            const textToAdd = String(text).replace(/\s+/g, ' ').trim();
-            
-            // Use simple text method with line wrapping
-            doc.text(textToAdd, margin, doc.y, {
-              width: maxWidth,
+            doc.text(String(text), x, doc.y, {
+              width: width,
               align: options.align || 'left',
-              lineGap: 2
+              lineGap: 4
             });
           };
 
