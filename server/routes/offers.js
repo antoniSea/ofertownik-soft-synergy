@@ -295,8 +295,8 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           const addText = (text, fontSize = 12, options = {}) => {
             const cleanedText = cleanText(text);
-            const lines = doc.splitTextToSize(cleanedText, doc.page.width - doc.page.margins.left - doc.page.margins.right - 20);
-            doc.fontSize(fontSize).text(lines, options);
+            doc.fontSize(fontSize);
+            doc.text(cleanedText, options);
           };
 
           // Title
@@ -1173,8 +1173,8 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
 
           const addText = (text, fontSize = 12, options = {}) => {
             const cleanedText = cleanText(text);
-            const lines = doc.splitTextToSize(cleanedText, doc.page.width - doc.page.margins.left - doc.page.margins.right - 20);
-            doc.fontSize(fontSize).text(lines, options);
+            doc.fontSize(fontSize);
+            doc.text(cleanedText, options);
           };
 
           // Title
