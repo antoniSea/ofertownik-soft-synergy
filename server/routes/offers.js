@@ -510,6 +510,32 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           doc.fillColor('#A855F7')
             .text('Synergy', 50 + footerSoft, doc.y);
           
+          // Add signature bottom-right if available
+          try {
+            const signaturePath = path.join(__dirname, '../../Podpis.jpg');
+            if (require('fs').existsSync(signaturePath)) {
+              const sigWidth = 140;
+              const sigY = doc.page.height - doc.page.margins.bottom - 60;
+              const sigX = doc.page.width - doc.page.margins.right - sigWidth;
+              doc.image(signaturePath, sigX, sigY, { width: sigWidth });
+            }
+          } catch (e) {
+            // ignore if signature missing
+          }
+
+          // Add signature bottom-right if available
+          try {
+            const signaturePath = path.join(__dirname, '../../Podpis.jpg');
+            if (require('fs').existsSync(signaturePath)) {
+              const sigWidth = 140;
+              const sigY = doc.page.height - doc.page.margins.bottom - 60;
+              const sigX = doc.page.width - doc.page.margins.right - sigWidth;
+              doc.image(signaturePath, sigX, sigY, { width: sigWidth });
+            }
+          } catch (e) {
+            // ignore if signature missing
+          }
+
           doc.y += 20;
           doc.fontSize(10).font(fonts.regular).fillColor('#666666');
           doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, doc.y, {
