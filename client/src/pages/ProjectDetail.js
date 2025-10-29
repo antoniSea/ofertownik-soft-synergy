@@ -73,6 +73,19 @@ const ProjectDetail = () => {
   const generateOfferMutation = useMutation(offersAPI.generate, {
     onSuccess: (data) => {
       toast.success('Oferta została wygenerowana pomyślnie!');
+      
+      // Update project data with URLs from response (for immediate UI update)
+      queryClient.setQueryData(['project', id], (oldData) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            generatedOfferUrl: data.htmlUrl,
+            pdfUrl: data.pdfUrl
+          };
+        }
+        return oldData;
+      });
+      
       queryClient.invalidateQueries(['project', id]);
     },
     onError: (error) => {
@@ -83,6 +96,17 @@ const ProjectDetail = () => {
   const generatePdfMutation = useMutation((projectData) => offersAPI.generatePdf(id, projectData), {
     onSuccess: (response) => {
       toast.success('PDF oferty został wygenerowany pomyślnie!');
+      
+      // Update project data with PDF URL from response (for immediate UI update)
+      queryClient.setQueryData(['project', id], (oldData) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            pdfUrl: response.pdfUrl
+          };
+        }
+        return oldData;
+      });
       
       // Automatycznie pobierz PDF
       if (response.pdfUrl) {
@@ -103,7 +127,26 @@ const ProjectDetail = () => {
     onSuccess: (response) => {
       toast.success('Zestawienie pracy zostało wygenerowane pomyślnie!');
       setShowWorkSummaryModal(false);
+      
+      // Update project data with URLs from response (for immediate UI update)
+      queryClient.setQueryData(['project', id], (oldData) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            workSummaryUrl: response.workSummaryUrl,
+            workSummaryPdfUrl: response.workSummaryPdfUrl
+          };
+        }
+        return oldData;
+      });
+      
+      // Force refresh project data to show PDF button
       queryClient.invalidateQueries(['project', id]);
+      
+      // If PDF was generated, show success message
+      if (response.workSummaryPdfUrl) {
+        toast.success('PDF zestawienia został wygenerowany!');
+      }
     },
     onError: () => toast.error('Błąd podczas generowania zestawienia pracy')
   });

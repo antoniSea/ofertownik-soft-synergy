@@ -83,6 +83,7 @@ const Projects = () => {
         document.body.removeChild(link);
       }
       
+      // Force refresh to show PDF button
       refetch();
     } catch (error) {
       console.error('PDF generation error:', error);
