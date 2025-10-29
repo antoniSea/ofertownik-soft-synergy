@@ -349,17 +349,6 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           });
           const fonts = setupUnicodeFonts(doc);
           
-          // Register fonts that support Polish characters
-          try {
-            // Try to use system fonts with better Unicode support
-            const fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-            if (require('fs').existsSync(fontPath)) {
-              doc.registerFont('Regular', fontPath);
-            }
-          } catch (e) {
-            console.log('Custom fonts not available, using default');
-          }
-          
           const stream = require('fs').createWriteStream(pdfPath);
           doc.pipe(stream);
 
@@ -1333,17 +1322,7 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
               Author: 'Soft Synergy'
             }
           });
-          
-          // Register fonts that support Polish characters
-          try {
-            // Try to use system fonts with better Unicode support
-            const fontPath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-            if (require('fs').existsSync(fontPath)) {
-              doc.registerFont('Regular', fontPath);
-            }
-          } catch (e) {
-            console.log('Custom fonts not available, using default');
-          }
+          const fonts = setupUnicodeFonts(doc);
           
           const stream = require('fs').createWriteStream(pdfPath);
           doc.pipe(stream);

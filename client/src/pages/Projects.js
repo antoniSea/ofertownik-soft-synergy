@@ -310,7 +310,7 @@ const Projects = () => {
                       Pobierz ofertę PDF
                     </div>
                   </a>
-                ) : project.generatedOfferUrl ? (
+                ) : (
                   <button
                     onClick={() => generatePdf(project)}
                     className="p-2 text-gray-400 hover:text-red-600 group relative"
@@ -321,7 +321,7 @@ const Projects = () => {
                       Generuj i pobierz PDF
                     </div>
                   </button>
-                ) : null}
+                )}
                 {project.contractPdfUrl ? (
                   <a
                     href={`https://oferty.soft-synergy.com${project.contractPdfUrl}`}
