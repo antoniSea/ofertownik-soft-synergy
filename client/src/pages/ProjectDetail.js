@@ -635,9 +635,10 @@ const ProjectDetail = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-primary w-full flex items-center justify-center"
+                    download
                   >
                     <FileCheck className="h-4 w-4 mr-2" />
-                    Zobacz zestawienie pracy HTML
+                    Pobierz zestawienie HTML
                   </a>
                   {project.workSummaryPdfUrl ? (
                     <a

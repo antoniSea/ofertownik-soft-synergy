@@ -518,7 +518,7 @@ router.post('/generate/:projectId', auth, async (req, res) => {
             .text('Synergy', 50 + footerSoft, doc.y);
           
           doc.y += 20;
-          doc.fontSize(10).font('Helvetica').fillColor('#666666');
+          doc.fontSize(10).font(fonts.regular).fillColor('#666666');
           doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, doc.y, {
             width: 500
           });
@@ -1452,7 +1452,7 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           doc.y += 10;
           
           // Company name with colors
-          doc.fontSize(14).font('Helvetica-Bold');
+          doc.fontSize(14).font(fonts.bold);
           
           const footerSoft = doc.widthOfString('Soft');
           
@@ -1462,7 +1462,7 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
             .text('Synergy', 50 + footerSoft, doc.y);
           
           doc.y += 20;
-          doc.fontSize(10).font('Helvetica').fillColor('#666666');
+          doc.fontSize(10).font(fonts.regular).fillColor('#666666');
           doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, doc.y, {
             width: 500
           });
@@ -1481,9 +1481,10 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
       });
 
       pdfUrl = `/generated-offers/${pdfFileName}`;
-      console.log('Work summary PDF generated successfully');
+      console.log('Work summary PDF generated successfully:', pdfUrl);
     } catch (pdfError) {
       console.error('Work summary PDF generation failed:', pdfError);
+      console.error('PDF Error details:', pdfError.message);
     }
 
     // Update project with generated work summary URL
@@ -1694,32 +1695,23 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
         doc.pipe(stream);
 
         // Register Unicode fonts (system DejaVu fonts)
-        const systemRegular = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
-        const systemBold = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
-        try {
-          doc.registerFont('Regular', systemRegular);
-          doc.registerFont('Bold', systemBold);
-        } catch (e) {
-          // Fallback to built-in fonts if system fonts missing (may cause diacritics issues)
-          doc.registerFont('Regular', 'Helvetica');
-          doc.registerFont('Bold', 'Helvetica-Bold');
-        }
+        const fonts = setupUnicodeFonts(doc);
 
         // Title
-        doc.font('Bold').fontSize(18).text(`Umowa realizacji ${project.name}`, { align: 'left' });
+        doc.font(fonts.bold).fontSize(18).text(`Umowa realizacji ${project.name}`, { align: 'left' });
         doc.moveDown(0.5);
-        doc.font('Regular').fontSize(11).fillColor('#333').text(`zawarta w dniu ${new Date().toLocaleDateString('pl-PL')} pomiędzy:`);
+        doc.font(fonts.regular).fontSize(11).fillColor('#333').text(`zawarta w dniu ${new Date().toLocaleDateString('pl-PL')} pomiędzy:`);
 
         // Parties
         doc.moveDown(0.8);
-        doc.fillColor('#000').font('Bold').fontSize(12).text('Jakub Czajka');
-        doc.font('Regular').fontSize(11).text('zamieszkały w Zielonej Górze na ulicy Rydza-Śmigłego 20/9 65-610,');
+        doc.fillColor('#000').font(fonts.bold).fontSize(12).text('Jakub Czajka');
+        doc.font(fonts.regular).fontSize(11).text('zamieszkały w Zielonej Górze na ulicy Rydza-Śmigłego 20/9 65-610,');
         doc.text('identyfikującym się dowodem osobistym o numerze seryjnym DAJ 798974 oraz o numerze PESEL 07302001359,');
         doc.text('działający w ramach marki Soft Synergy');
         doc.moveDown(0.6);
         doc.text('a');
         doc.moveDown(0.6);
-        doc.font('Bold').text('[Dane Klienta]');
+        doc.font(fonts.bold).text('[Dane Klienta]');
         // Dotted area for client data input (with extra spacing to avoid overlap)
         const startX = doc.page.margins.left;
         const width = doc.page.width - doc.page.margins.left - doc.page.margins.right;
@@ -1734,7 +1726,7 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
         doc.undash().strokeColor('#000');
         // move cursor below dotted block with safe margin
         doc.y = y + 16;
-        doc.font('Regular').text('zwana dalej „Zamawiającym”');
+        doc.font(fonts.regular).text('zwana dalej „Zamawiającym"');
 
         // Rule
         doc.moveDown(0.6);
@@ -1742,11 +1734,11 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
 
         const sectionHeader = (title) => {
           doc.moveDown(1);
-          doc.font('Bold').fontSize(13).fillColor('#000').text(title);
+          doc.font(fonts.bold).fontSize(13).fillColor('#000').text(title);
         };
         const bulletList = (items) => {
           doc.moveDown(0.2);
-          doc.font('Regular').fontSize(11).fillColor('#000');
+          doc.font(fonts.regular).fontSize(11).fillColor('#000');
           items.forEach((t, idx) => {
             doc.text(`${idx + 1}. ${t}`, { indent: 14 });
           });
@@ -1757,7 +1749,7 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
         const offerDate = project.createdAt
           ? new Date(project.createdAt).toLocaleDateString('pl-PL')
           : new Date().toLocaleDateString('pl-PL');
-        doc.font('Regular').fontSize(11).text(`Wykonawca zobowiązuje się do realizacji projektu "${project.name}" zgodnie z zakresem opisanym w Załączniku nr 1 (oferta z dnia ${offerDate}).`);
+        doc.font(fonts.regular).fontSize(11).text(`Wykonawca zobowiązuje się do realizacji projektu "${project.name}" zgodnie z zakresem opisanym w Załączniku nr 1 (oferta z dnia ${offerDate}).`);
 
         // §2
         sectionHeader('§2. Zakres prac');
@@ -1775,13 +1767,13 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
           bulletList(timelineBullets);
         }
         doc.moveDown(0.2);
-        doc.font('Regular').fontSize(11).fillColor('#000');
+        doc.font(fonts.regular).fontSize(11).fillColor('#000');
         doc.text(`* Prace rozpoczną się w ciągu 3 dni roboczych od odesłania podpisanej umowy.`, { indent: 14 });
 
         // §4 – Wynagrodzenie i płatności dynamicznie
         sectionHeader('§4. Wynagrodzenie i płatności');
         const total = currency(project?.pricing?.total || 0);
-        doc.font('Regular').fontSize(11).text(`Łączne wynagrodzenie za realizację prac wynosi ${total} netto.`);
+        doc.font(fonts.regular).fontSize(11).text(`Łączne wynagrodzenie za realizację prac wynosi ${total} netto.`);
         doc.moveDown(0.2);
         const paymentLines = (project.customPaymentTerms && project.customPaymentTerms.trim().length)
           ? project.customPaymentTerms.split(/\n+/)
@@ -1798,8 +1790,8 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
         doc.moveDown(0.2);
         doc.text('Faktury VAT za powyższe kwoty wystawi firma:');
         doc.moveDown(0.2);
-        doc.font('Bold').text('FUNDACJA AIP');
-        doc.font('Regular').text('NIP: 5242495143');
+        doc.font(fonts.bold).text('FUNDACJA AIP');
+        doc.font(fonts.regular).text('NIP: 5242495143');
         doc.text('ul. ALEJA KSIĘCIA JÓZEFA PONIATOWSKIEGO 1/ — 03-901');
         doc.text('WARSZAWA MAZOWIECKIE');
         doc.text('email: jakub.czajka@soft-synergy.com');
@@ -1838,7 +1830,7 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
         const colWidth = pageWidth / 2 - 10;
         // Left
         doc.moveTo(doc.page.margins.left, yStart + 30).lineTo(doc.page.margins.left + colWidth, yStart + 30).strokeColor('#000').lineWidth(1).stroke();
-        doc.font('Regular').fontSize(10).text('Zamawiający', doc.page.margins.left, yStart + 35, { width: colWidth, align: 'left' });
+        doc.font(fonts.regular).fontSize(10).text('Zamawiający', doc.page.margins.left, yStart + 35, { width: colWidth, align: 'left' });
         // Right
         const rightX = doc.page.margins.left + colWidth + 20;
         const lineY = yStart + 30;
@@ -1854,7 +1846,7 @@ router.post('/generate-contract/:projectId', auth, async (req, res) => {
           // ignore if image not found
         }
         // Place caption under the signature image
-        doc.font('Regular').text('Jakub Czajka\ndziałający w ramach marki Soft Synergy', rightX, lineY + 25 + 70, { width: colWidth, align: 'right' });
+        doc.font(fonts.regular).text('Jakub Czajka\ndziałający w ramach marki Soft Synergy', rightX, lineY + 25 + 70, { width: colWidth, align: 'right' });
 
         doc.end();
         stream.on('finish', resolve);
