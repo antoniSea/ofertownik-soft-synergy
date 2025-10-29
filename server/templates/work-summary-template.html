@@ -227,9 +227,15 @@
                     <a href="mailto:{{companyEmail}}?subject=Zapytanie dotyczące projektu - {{summaryNumber}}" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-lg py-3 px-8 rounded-lg transition-all duration-300 hover:from-blue-500 hover:to-purple-500 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1">
                         Kontakt
                     </a>
+                    {{#if workSummaryPdfUrl}}
+                    <a href="https://oferty.soft-synergy.com{{workSummaryPdfUrl}}" target="_blank" rel="noopener" class="bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white font-semibold py-3 px-8 rounded-lg border border-blue-500/50 transition-all hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20">
+                        {{t.downloadSummary}}
+                    </a>
+                    {{else}}
                     <button onclick="downloadHTML(event)" class="bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white font-semibold py-3 px-8 rounded-lg border border-blue-500/50 transition-all hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20">
                         {{t.downloadSummary}}
                     </button>
+                    {{/if}}
                 </div>
             </section>
         </main>

@@ -323,11 +323,6 @@ router.post('/generate/:projectId', auth, async (req, res) => {
       // Continue with generation even if cleanup fails
     }
 
-    // Save HTML file
-    const fileName = `offer-${project._id}-${Date.now()}.html`;
-    const filePath = path.join(outputDir, fileName);
-    await fs.writeFile(filePath, html);
-
     // Try to generate PDF, but don't fail if it doesn't work
     let pdfFileName = null;
     let pdfUrl = null;
@@ -540,6 +535,13 @@ router.post('/generate/:projectId', auth, async (req, res) => {
       console.error('Offer PDF generation failed:', pdfError);
       console.log('Continuing with HTML generation only');
     }
+
+    // After PDF attempt, render HTML with pdfUrl included and save
+    templateData.pdfUrl = pdfUrl;
+    const fileName = `offer-${project._id}-${Date.now()}.html`;
+    const filePath = path.join(outputDir, fileName);
+    const htmlOutput = templateWithOptions(templateData);
+    await fs.writeFile(filePath, htmlOutput);
 
     // Update project with generated offer URL and PDF URL
     project.generatedOfferUrl = `/generated-offers/${fileName}`;
