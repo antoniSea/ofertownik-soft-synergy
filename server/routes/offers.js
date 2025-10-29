@@ -15,6 +15,9 @@ const router = express.Router();
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, '../uploads/documents');
+    try {
+      require('fs').mkdirSync(uploadDir, { recursive: true });
+    } catch (e) {}
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
@@ -1316,7 +1319,10 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
         }
       ],
       companyEmail: 'jakub.czajka@soft-synergy.com',
-      companyPhone: '+48 793 868 886'
+      companyPhone: '+48 793 868 886',
+      // invoice links
+      vatUrl: (project.documents || []).find(d => d.type === 'vat') ? (project.documents.find(d => d.type === 'vat').filePath) : null,
+      proformaUrl: (project.documents || []).find(d => d.type === 'proforma') ? (project.documents.find(d => d.type === 'proforma').filePath) : null
     };
 
     const html = template(workSummaryData);
@@ -1534,6 +1540,26 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           doc.text('Innowacyjne rozwiązania programistyczne', 50, doc.y, {
             width: 500
           });
+
+          // Invoices links section (if available)
+          doc.moveDown(1.2);
+          doc.font(fonts.bold).fontSize(13).fillColor('#000000');
+          addText('Faktury dla tego projektu', 13);
+          doc.font(fonts.regular).fontSize(11).fillColor('#000000');
+          addText('Soft Synergy przemyślało to za Ciebie — jeśli szukasz faktur do tego projektu, znajdziesz je poniżej.', 11);
+          doc.moveDown(0.4);
+          if (workSummaryData.proformaUrl) {
+            doc.fillColor('#1d4ed8');
+            doc.text('Pobierz Fakturę Proforma', 50, doc.y, {
+              link: `https://oferty.soft-synergy.com${workSummaryData.proformaUrl}`
+            });
+          }
+          if (workSummaryData.vatUrl) {
+            doc.fillColor('#1d4ed8');
+            doc.text('Pobierz Fakturę VAT', 50, doc.y, {
+              link: `https://oferty.soft-synergy.com${workSummaryData.vatUrl}`
+            });
+          }
 
           // Review request section with clickable link
           doc.moveDown(1.2);
