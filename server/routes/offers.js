@@ -52,13 +52,16 @@ function setupUnicodeFonts(doc) {
     if (fsSync.existsSync(localRegular)) {
       doc.registerFont('NotoSans-Regular', localRegular);
       regular = 'NotoSans-Regular';
+      console.log('Using bundled NotoSans-Regular font');
     }
     if (fsSync.existsSync(localBold)) {
       doc.registerFont('NotoSans-Bold', localBold);
       bold = 'NotoSans-Bold';
+      console.log('Using bundled NotoSans-Bold font');
     } else if (regular === 'NotoSans-Regular') {
       // Fallback: if only regular exists, use it for bold too
       bold = 'NotoSans-Regular';
+      console.log('Using NotoSans-Regular for bold (fallback)');
     }
 
     // If no bundled fonts, try common system DejaVu fonts (Linux)
@@ -68,12 +71,15 @@ function setupUnicodeFonts(doc) {
       if (fsSync.existsSync(sysRegular)) {
         doc.registerFont('DejaVuSans', sysRegular);
         regular = 'DejaVuSans';
+        console.log('Using system DejaVuSans font');
       }
       if (fsSync.existsSync(sysBold)) {
         doc.registerFont('DejaVuSans-Bold', sysBold);
         bold = 'DejaVuSans-Bold';
+        console.log('Using system DejaVuSans-Bold font');
       } else if (regular !== 'Helvetica') {
         bold = regular;
+        console.log('Using DejaVuSans for bold (fallback)');
       }
     }
 
@@ -84,12 +90,15 @@ function setupUnicodeFonts(doc) {
         doc.registerFont('ArialUnicode', macRegular);
         regular = 'ArialUnicode';
         bold = 'ArialUnicode';
+        console.log('Using macOS ArialUnicode font');
       }
     }
-  } catch (_) {
+  } catch (e) {
+    console.error('Font setup error:', e);
     // Keep Helvetica fallback silently
   }
 
+  console.log(`Final fonts: regular=${regular}, bold=${bold}`);
   return { regular, bold };
 }
 
@@ -1113,6 +1122,23 @@ router.post('/generate-pdf-simple', auth, async (req, res) => {
         reject(e);
       }
     });
+
+    // Update project with PDF URL if we have project data
+    if (projectData._id) {
+      try {
+        const Project = require('../models/Project');
+        const updatedProject = await Project.findByIdAndUpdate(projectData._id, {
+          pdfUrl: `/generated-offers/${pdfFileName}`
+        }, { new: true });
+        console.log('Updated project PDF URL:', projectData._id, 'New PDF URL:', updatedProject?.pdfUrl);
+      } catch (updateError) {
+        console.error('Failed to update project PDF URL:', updateError);
+        console.error('Project ID:', projectData._id);
+        console.error('Error details:', updateError.message);
+      }
+    } else {
+      console.log('No project ID provided, cannot update database');
+    }
 
     res.json({
       message: 'PDF oferty został wygenerowany pomyślnie',

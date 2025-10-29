@@ -68,7 +68,9 @@ const Projects = () => {
 
   const generatePdf = async (project) => {
     try {
+      console.log('Generating PDF for project:', project._id);
       const response = await offersAPI.generatePdf(project._id, project);
+      console.log('PDF generation response:', response);
       toast.success('PDF oferty został wygenerowany pomyślnie!');
       
       // Automatycznie pobierz PDF
@@ -83,6 +85,7 @@ const Projects = () => {
       
       refetch();
     } catch (error) {
+      console.error('PDF generation error:', error);
       toast.error('Błąd podczas generowania PDF');
     }
   };
