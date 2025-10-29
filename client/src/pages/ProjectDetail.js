@@ -693,7 +693,16 @@ const ProjectDetail = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Pobierz zestawienie PDF
                     </a>
-                  ) : null}
+                  ) : (
+                    <button
+                      onClick={() => generateWorkSummaryMutation.mutate(workSummaryData)}
+                      disabled={generateWorkSummaryMutation.isLoading}
+                      className="btn-secondary w-full flex items-center justify-center disabled:opacity-50"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      {generateWorkSummaryMutation.isLoading ? 'Generowanie PDF...' : 'Generuj zestawienie PDF'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
