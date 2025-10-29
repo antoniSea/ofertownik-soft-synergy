@@ -1320,6 +1320,7 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
       ],
       companyEmail: 'jakub.czajka@soft-synergy.com',
       companyPhone: '+48 793 868 886',
+      baseUrl: (req.get('host') ? ((req.protocol || 'https') + '://' + req.get('host')) : 'https://oferty.soft-synergy.com'),
       // invoice links
       vatUrl: (project.documents || []).find(d => d.type === 'vat') ? (project.documents.find(d => d.type === 'vat').filePath) : null,
       proformaUrl: (project.documents || []).find(d => d.type === 'proforma') ? (project.documents.find(d => d.type === 'proforma').filePath) : null
@@ -1551,13 +1552,13 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           if (workSummaryData.proformaUrl) {
             doc.fillColor('#1d4ed8');
             doc.text('Pobierz Fakturę Proforma', 50, doc.y, {
-              link: `https://oferty.soft-synergy.com${workSummaryData.proformaUrl}`
+              link: `${workSummaryData.baseUrl}${workSummaryData.proformaUrl}`
             });
           }
           if (workSummaryData.vatUrl) {
             doc.fillColor('#1d4ed8');
             doc.text('Pobierz Fakturę VAT', 50, doc.y, {
-              link: `https://oferty.soft-synergy.com${workSummaryData.vatUrl}`
+              link: `${workSummaryData.baseUrl}${workSummaryData.vatUrl}`
             });
           }
 
