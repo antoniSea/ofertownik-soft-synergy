@@ -1535,6 +1535,18 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
             width: 500
           });
 
+          // Review request section with clickable link
+          doc.moveDown(1.2);
+          doc.font(fonts.bold).fontSize(13).fillColor('#000000');
+          addText('Twoja opinia jest dla nas bardzo ważna', 13);
+          doc.font(fonts.regular).fontSize(11).fillColor('#000000');
+          addText('Jeśli jesteś zadowolony ze współpracy, zostaw proszę krótką opinię o Soft Synergy. To bardzo pomaga nam rosnąć i docierać do nowych klientów.', 11);
+          doc.moveDown(0.4);
+          doc.fillColor('#1d4ed8');
+          doc.text('Wystaw opinię na Google', 50, doc.y, {
+            link: 'https://www.google.com/maps/place/Soft+Synergy/data=!4m2!3m1!1s0x0:0xf6e09ce57a8bc115?sa=X&ved=1t:2428&ictx=111'
+          });
+
           doc.end();
           stream.on('finish', resolve);
           stream.on('error', reject);
