@@ -38,6 +38,61 @@ const upload = multer({
   }
 });
 
+// PDF font setup to ensure proper rendering of Polish diacritics
+// Returns object with { regular, bold } font names registered in the PDF document
+function setupUnicodeFonts(doc) {
+  let regular = 'Helvetica';
+  let bold = 'Helvetica-Bold';
+
+  try {
+    // Prefer bundled fonts (put files into server/public/fonts)
+    const localRegular = path.join(__dirname, '../public/fonts/NotoSans-Regular.ttf');
+    const localBold = path.join(__dirname, '../public/fonts/NotoSans-Bold.ttf');
+    const fsSync = require('fs');
+    if (fsSync.existsSync(localRegular)) {
+      doc.registerFont('NotoSans-Regular', localRegular);
+      regular = 'NotoSans-Regular';
+    }
+    if (fsSync.existsSync(localBold)) {
+      doc.registerFont('NotoSans-Bold', localBold);
+      bold = 'NotoSans-Bold';
+    } else if (regular === 'NotoSans-Regular') {
+      // Fallback: if only regular exists, use it for bold too
+      bold = 'NotoSans-Regular';
+    }
+
+    // If no bundled fonts, try common system DejaVu fonts (Linux)
+    if (regular === 'Helvetica') {
+      const sysRegular = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+      const sysBold = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+      if (fsSync.existsSync(sysRegular)) {
+        doc.registerFont('DejaVuSans', sysRegular);
+        regular = 'DejaVuSans';
+      }
+      if (fsSync.existsSync(sysBold)) {
+        doc.registerFont('DejaVuSans-Bold', sysBold);
+        bold = 'DejaVuSans-Bold';
+      } else if (regular !== 'Helvetica') {
+        bold = regular;
+      }
+    }
+
+    // macOS fallback (Arial Unicode)
+    if (regular === 'Helvetica') {
+      const macRegular = '/System/Library/Fonts/Supplemental/Arial Unicode.ttf';
+      if (require('fs').existsSync(macRegular)) {
+        doc.registerFont('ArialUnicode', macRegular);
+        regular = 'ArialUnicode';
+        bold = 'ArialUnicode';
+      }
+    }
+  } catch (_) {
+    // Keep Helvetica fallback silently
+  }
+
+  return { regular, bold };
+}
+
 // Simple i18n dictionary for offer template
 const i18n = {
   pl: {
@@ -283,6 +338,7 @@ router.post('/generate/:projectId', auth, async (req, res) => {
               Author: 'Soft Synergy'
             }
           });
+          const fonts = setupUnicodeFonts(doc);
           
           // Register fonts that support Polish characters
           try {
@@ -330,7 +386,7 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           }
 
           // Add company name with colors
-          doc.fontSize(24).font('Helvetica-Bold');
+          doc.fontSize(24).font(fonts.bold);
           
           // Calculate width first
           const testSoft = doc.widthOfString('Soft');
@@ -344,7 +400,7 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           
           // Reset color and font
           doc.fillColor('#000000');
-          doc.fontSize(16).font('Helvetica').fillColor('#666666');
+          doc.fontSize(16).font(fonts.regular).fillColor('#666666');
           doc.text('Innowacyjne rozwiązania programistyczne', 50, currentY + 35, {
             width: 450,
             align: 'left'
@@ -356,7 +412,7 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           doc.moveDown(1);
           
           // Add title
-          doc.fontSize(18).font('Helvetica-Bold').fillColor('#1e40af');
+          doc.fontSize(18).font(fonts.bold).fillColor('#1e40af');
           addText(`OFERTA: ${project.name}`, 18, { align: 'center' });
           doc.moveDown(1);
           
@@ -368,18 +424,18 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           // Description with colored header
           if (project.description) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#a855f7');
+            doc.fontSize(14).font(fonts.bold).fillColor('#a855f7');
             addText('Opis projektu:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             addText(project.description, 12);
             doc.moveDown(1);
           }
 
           // Modules
           if (project.modules && project.modules.length > 0) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#3b82f6');
+            doc.fontSize(14).font(fonts.bold).fillColor('#3b82f6');
             addText('Zakres prac:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             project.modules.forEach((module, index) => {
               addText(`${index + 1}. ${module.name}`, 12);
               if (module.description) {
@@ -391,9 +447,9 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           // Timeline
           if (project.timeline) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#a855f7');
+            doc.fontSize(14).font(fonts.bold).fillColor('#a855f7');
             addText('Harmonogram:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             if (project.timeline.phase1) {
               addText(`• ${project.timeline.phase1.name}: ${project.timeline.phase1.duration}`, 12);
             }
@@ -411,9 +467,9 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           // Pricing
           if (project.pricing) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#10b981');
+            doc.fontSize(14).font(fonts.bold).fillColor('#10b981');
             addText('Wycenienie:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             if (project.pricing.phase1 > 0) {
               addText(`Faza I: ${new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(project.pricing.phase1)}`, 12);
             }
@@ -452,7 +508,7 @@ router.post('/generate/:projectId', auth, async (req, res) => {
           doc.y += 10;
           
           // Company name with colors
-          doc.fontSize(14).font('Helvetica-Bold');
+          doc.fontSize(14).font(fonts.bold);
           
           const footerSoft = doc.widthOfString('Soft');
           
@@ -749,6 +805,8 @@ router.post('/generate-pdf/:projectId', auth, async (req, res) => {
           size: 'A4', 
           margins: { top: 50, left: 50, right: 50, bottom: 50 } 
         });
+        const fonts = setupUnicodeFonts(doc);
+        doc.font(fonts.regular);
         const stream = require('fs').createWriteStream(pdfPath);
         doc.pipe(stream);
 
@@ -929,6 +987,8 @@ router.post('/generate-pdf-simple', auth, async (req, res) => {
           size: 'A4', 
           margins: { top: 50, left: 50, right: 50, bottom: 50 } 
         });
+        const fonts = setupUnicodeFonts(doc);
+        doc.font(fonts.regular);
         const stream = require('fs').createWriteStream(pdfPath);
         doc.pipe(stream);
 
@@ -1284,7 +1344,7 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           }
 
           // Add company name with colors
-          doc.fontSize(24).font('Helvetica-Bold');
+          doc.fontSize(24).font(fonts.bold);
           doc.fillColor('#3B82F6')
             .text('Soft', 50, currentY);
           let softW = doc.widthOfString('Soft');
@@ -1292,7 +1352,7 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
             .text('Synergy', 50 + softW, currentY);
           
           doc.fillColor('#000000');
-          doc.fontSize(16).font('Helvetica').fillColor('#666666');
+          doc.fontSize(16).font(fonts.regular).fillColor('#666666');
           doc.text('Innowacyjne rozwiązania programistyczne', 50, currentY + 35, {
             width: 450
           });
@@ -1302,15 +1362,15 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           doc.moveDown(1);
           
           // Title with branding
-          doc.fontSize(20).font('Helvetica-Bold').fillColor('#1e40af');
+          doc.fontSize(20).font(fonts.bold).fillColor('#1e40af');
           addText(`ZESTAWIENIE PRAC: ${project.name}`, 18, { align: 'center' });
           doc.moveDown(1);
-          doc.font('Helvetica').fillColor('#000000');
+          doc.font(fonts.regular).fillColor('#000000');
           
           // Client info with styling
-          doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e40af');
+          doc.fontSize(12).font(fonts.bold).fillColor('#1e40af');
           doc.text('Klient:', 50, doc.y);
-          doc.font('Helvetica').fillColor('#000000');
+          doc.font(fonts.regular).fillColor('#000000');
           doc.text(project.clientName, 100, doc.y);
           doc.y += 20;
           doc.text(`Numer zestawienia: ${workSummaryData.summaryNumber}`, 50, doc.y);
@@ -1321,26 +1381,26 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
 
           // Description with colored header
           if (workSummaryData.summaryDescription) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#a855f7');
+            doc.fontSize(14).font(fonts.bold).fillColor('#a855f7');
             addText('Opis zestawienia:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             addText(workSummaryData.summaryDescription, 12);
             doc.moveDown(1);
           }
 
           // Project details with colored header
-          doc.fontSize(14).font('Helvetica-Bold').fillColor('#3b82f6');
+          doc.fontSize(14).font(fonts.bold).fillColor('#3b82f6');
           addText('Szczegóły projektu:', 14);
-          doc.font('Helvetica').fillColor('#000000');
+          doc.font(fonts.regular).fillColor('#000000');
           addText(`Okres realizacji: ${workSummaryData.periodStart} - ${workSummaryData.periodEnd}`, 12);
           addText(`Status: ${workSummaryData.status}`, 12);
           doc.moveDown(1);
 
           // Completed tasks
           if (workSummaryData.completedTasks && workSummaryData.completedTasks.length > 0) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#10b981');
+            doc.fontSize(14).font(fonts.bold).fillColor('#10b981');
             addText('Wykonane zadania:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             workSummaryData.completedTasks.forEach((task, index) => {
               if (task.name) {
                 addText(`${index + 1}. ${task.name}`, 12);
@@ -1357,9 +1417,9 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
 
           // Statistics
           if (workSummaryData.statistics && workSummaryData.statistics.length > 0) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#f59e0b');
+            doc.fontSize(14).font(fonts.bold).fillColor('#f59e0b');
             addText('Statystyki projektu:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             workSummaryData.statistics.forEach(stat => {
               if (stat.label && stat.value) {
                 addText(`• ${stat.label}: ${stat.value}`, 12);
@@ -1370,9 +1430,9 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
 
           // Achievements
           if (workSummaryData.achievements && workSummaryData.achievements.length > 0) {
-            doc.fontSize(14).font('Helvetica-Bold').fillColor('#8b5cf6');
+            doc.fontSize(14).font(fonts.bold).fillColor('#8b5cf6');
             addText('Osiągnięcia:', 14);
-            doc.font('Helvetica').fillColor('#000000');
+            doc.font(fonts.regular).fillColor('#000000');
             workSummaryData.achievements.forEach((achievement, index) => {
               if (achievement.name) {
                 addText(`${index + 1}. ${achievement.name}`, 12);
