@@ -538,9 +538,20 @@ router.post('/generate/:projectId', auth, async (req, res) => {
 
           doc.y += 20;
           doc.fontSize(10).font(fonts.regular).fillColor('#666666');
-          doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, doc.y, {
+          const contactY1 = doc.y;
+          doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, contactY1, {
             width: 500
           });
+          // Signature aligned with contact line (offer)
+          try {
+            const signaturePath = path.join(__dirname, '../../Podpis.jpg');
+            if (require('fs').existsSync(signaturePath)) {
+              const sigWidth = 280; // 2x bigger
+              const sigX = doc.page.width - doc.page.margins.right - sigWidth;
+              const sigY = contactY1 - 10; // slightly above baseline
+              doc.image(signaturePath, sigX, sigY, { width: sigWidth });
+            }
+          } catch (e) {}
           
           doc.y += 15;
           doc.text('Innowacyjne rozwiązania programistyczne', 50, doc.y, {
@@ -1504,9 +1515,20 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
           
           doc.y += 20;
           doc.fontSize(10).font(fonts.regular).fillColor('#666666');
-          doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, doc.y, {
+          const contactY2 = doc.y;
+          doc.text('Kontakt: jakub.czajka@soft-synergy.com | +48 793 868 886', 50, contactY2, {
             width: 500
           });
+          // Signature aligned with contact line (work summary)
+          try {
+            const signaturePath = path.join(__dirname, '../../Podpis.jpg');
+            if (require('fs').existsSync(signaturePath)) {
+              const sigWidth = 280; // 2x bigger
+              const sigX = doc.page.width - doc.page.margins.right - sigWidth;
+              const sigY = contactY2 - 10;
+              doc.image(signaturePath, sigX, sigY, { width: sigWidth });
+            }
+          } catch (e) {}
           
           doc.y += 15;
           doc.text('Innowacyjne rozwiązania programistyczne', 50, doc.y, {
@@ -1526,6 +1548,15 @@ router.post('/generate-work-summary/:projectId', auth, async (req, res) => {
     } catch (pdfError) {
       console.error('Work summary PDF generation failed:', pdfError);
       console.error('PDF Error details:', pdfError.message);
+    }
+
+    // Inject generated PDF URL into HTML and overwrite file so template can link to PDF
+    try {
+      workSummaryData.workSummaryPdfUrl = pdfUrl;
+      const htmlWithPdf = template(workSummaryData);
+      await fs.writeFile(filePath, htmlWithPdf);
+    } catch (e) {
+      console.log('Failed to rewrite work summary HTML with PDF URL:', e.message);
     }
 
     // Update project with generated work summary URL
